@@ -1,0 +1,9 @@
+EESchema-DOCLIB  Version 2.0
+#
+$CMP NCS214RMUTAG
+D Current-Shunt Monitor, Voltage Output, Bi-Directional Zero-Drift, 100V/V Gain, UDFN10 1.4x1.8
+K Current shunt monitor
+F https://www.onsemi.com/pub/Collateral/NCS210R-D.PDF
+$ENDCMP
+#
+#End Doc Library

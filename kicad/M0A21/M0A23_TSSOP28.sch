@@ -1,0 +1,346 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 3 5
+Title "Multi purpose power converter module with CAN bus interface"
+Date "2021-08-04"
+Rev "1.0.0"
+Comp "DANCHOUZHOU"
+Comment1 "City Science - MIT Media Lab"
+Comment2 "danchouzhou@gmail.com"
+Comment3 ""
+Comment4 ""
+$EndDescr
+Wire Notes Line
+	8500 5000 10500 5000
+Wire Notes Line
+	10500 5000 10500 6500
+Wire Notes Line
+	10500 6500 8500 6500
+Wire Notes Line
+	8500 6500 8500 5000
+$Comp
+L Device:C C4
+U 1 1 6087C302
+P 9000 5900
+F 0 "C4" H 9115 5946 50  0000 L CNN
+F 1 "10uF" H 9115 5855 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0805_2012Metric" H 9038 5750 50  0001 C CNN
+F 3 "~" H 9000 5900 50  0001 C CNN
+F 4 "Yageo" H 9000 5900 50  0001 C CNN "Manufacturer"
+F 5 "CC0603KRX7R7BB104" H 9000 5900 50  0001 C CNN "PN"
+F 6 "Mouser" H 9000 5900 50  0001 C CNN "Vendor"
+	1    9000 5900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	9000 6250 9000 6050
+Wire Wire Line
+	9000 5550 9000 5750
+$Comp
+L power:+5V #PWR016
+U 1 1 6087E3F1
+P 9000 5550
+F 0 "#PWR016" H 9000 5400 50  0001 C CNN
+F 1 "+5V" H 9015 5723 50  0000 C CNN
+F 2 "" H 9000 5550 50  0001 C CNN
+F 3 "" H 9000 5550 50  0001 C CNN
+	1    9000 5550
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR017
+U 1 1 6087F00A
+P 9000 6250
+F 0 "#PWR017" H 9000 6000 50  0001 C CNN
+F 1 "GND" H 9005 6077 50  0000 C CNN
+F 2 "" H 9000 6250 50  0001 C CNN
+F 3 "" H 9000 6250 50  0001 C CNN
+	1    9000 6250
+	1    0    0    -1  
+$EndComp
+Text Notes 8600 5200 0    100  Italic 20
+Bulk capacitor
+Wire Notes Line
+	8500 1000 10500 1000
+Wire Notes Line
+	10500 1000 10500 4500
+Wire Notes Line
+	10500 4500 8500 4500
+Wire Notes Line
+	8500 4500 8500 1000
+Text Notes 8600 1200 0    100  Italic 20
+Off page connection
+$Comp
+L M0A21:M0A23EC1AC U2
+U 1 1 6086F78D
+P 5750 4000
+F 0 "U2" H 5750 4915 50  0000 C CNN
+F 1 "M0A23EC1AC" H 5750 4824 50  0000 C CNN
+F 2 "Package_SO:TSSOP-28_4.4x9.7mm_P0.65mm" H 5750 5550 50  0001 C CNN
+F 3 "" H 5750 5550 50  0001 C CNN
+F 4 "Nuvoton" H 5750 4000 50  0001 C CNN "Manufacturer"
+F 5 "M0A23EC1AC" H 5750 4000 50  0001 C CNN "PN"
+F 6 "TECHDesign" H 5750 4000 50  0001 C CNN "Vendor"
+	1    5750 4000
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	6250 3350 6750 3350
+$Comp
+L power:GND #PWR015
+U 1 1 60873317
+P 6750 3350
+F 0 "#PWR015" H 6750 3100 50  0001 C CNN
+F 1 "GND" V 6755 3222 50  0000 R CNN
+F 2 "" H 6750 3350 50  0001 C CNN
+F 3 "" H 6750 3350 50  0001 C CNN
+	1    6750 3350
+	0    -1   -1   0   
+$EndComp
+Wire Wire Line
+	6250 3450 6750 3450
+Wire Wire Line
+	6750 3550 6250 3550
+Text Label 6750 3450 2    50   ~ 0
+ICE_DAT
+Wire Wire Line
+	4750 3350 5250 3350
+$Comp
+L power:+5V #PWR014
+U 1 1 6087B97B
+P 4750 3350
+F 0 "#PWR014" H 4750 3200 50  0001 C CNN
+F 1 "+5V" H 4765 3523 50  0000 C CNN
+F 2 "" H 4750 3350 50  0001 C CNN
+F 3 "" H 4750 3350 50  0001 C CNN
+	1    4750 3350
+	1    0    0    -1  
+$EndComp
+Wire Notes Line
+	1500 1000 3500 1000
+Wire Notes Line
+	3500 1000 3500 2500
+Wire Notes Line
+	3500 2500 1500 2500
+Wire Notes Line
+	1500 2500 1500 1000
+Wire Notes Line
+	1500 3000 3500 3000
+Wire Notes Line
+	3500 3000 3500 4500
+Wire Notes Line
+	3500 4500 1500 4500
+Wire Notes Line
+	1500 4500 1500 3000
+Text Notes 1600 1200 0    100  Italic 20
+ICE Interface
+Text Notes 1600 3200 0    100  Italic 20
+ICE pull-up
+$Comp
+L Device:R R1
+U 1 1 60891DEF
+P 2500 3750
+F 0 "R1" V 2293 3750 50  0000 C CNN
+F 1 "100K" V 2384 3750 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 2430 3750 50  0001 C CNN
+F 3 "~" H 2500 3750 50  0001 C CNN
+F 4 "Mouser" H 2500 3750 50  0001 C CNN "Vendor"
+F 5 "Walsin" H 2500 3750 50  0001 C CNN "Manufacturer"
+F 6 "MR06X1003FTL" H 2500 3750 50  0001 C CNN "PN"
+	1    2500 3750
+	0    1    1    0   
+$EndComp
+$Comp
+L Device:R R2
+U 1 1 60892143
+P 2500 4150
+F 0 "R2" V 2293 4150 50  0000 C CNN
+F 1 "100K" V 2384 4150 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 2430 4150 50  0001 C CNN
+F 3 "~" H 2500 4150 50  0001 C CNN
+F 4 "Mouser" H 2500 4150 50  0001 C CNN "Vendor"
+F 5 "Walsin" H 2500 4150 50  0001 C CNN "Manufacturer"
+F 6 "MR06X1003FTL" H 2500 4150 50  0001 C CNN "PN"
+	1    2500 4150
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	1850 3750 2350 3750
+Wire Wire Line
+	1850 4150 2350 4150
+Wire Wire Line
+	3150 3750 2650 3750
+Wire Wire Line
+	3150 4150 2650 4150
+Wire Wire Line
+	1850 3550 1850 3750
+Wire Wire Line
+	1850 3750 1850 4150
+Connection ~ 1850 3750
+$Comp
+L power:+5V #PWR011
+U 1 1 60896299
+P 1850 3550
+F 0 "#PWR011" H 1850 3400 50  0001 C CNN
+F 1 "+5V" H 1865 3723 50  0000 C CNN
+F 2 "" H 1850 3550 50  0001 C CNN
+F 3 "" H 1850 3550 50  0001 C CNN
+	1    1850 3550
+	1    0    0    -1  
+$EndComp
+Text Label 3150 3750 2    50   ~ 0
+ICE_DAT
+Text Label 3150 4150 2    50   ~ 0
+ICE_CLK
+Text Notes 1600 5200 0    100  Italic 20
+Reset
+Wire Notes Line
+	1500 6500 1500 5000
+Wire Notes Line
+	3500 6500 1500 6500
+Wire Notes Line
+	3500 5000 3500 6500
+Wire Notes Line
+	1500 5000 3500 5000
+Wire Wire Line
+	9000 2300 9750 2300
+Wire Wire Line
+	9000 2400 9750 2400
+Wire Wire Line
+	9000 1500 9750 1500
+Text Label 9000 1500 0    50   ~ 0
+CAN0_TXD
+Wire Wire Line
+	9000 1600 9750 1600
+Text Label 9000 1600 0    50   ~ 0
+CAN0_RXD
+Wire Wire Line
+	6250 4650 6750 4650
+Text Label 6750 4650 2    50   ~ 0
+UART0_RXD
+NoConn ~ 5250 4250
+NoConn ~ 5250 4350
+NoConn ~ 5250 4450
+NoConn ~ 5250 4550
+NoConn ~ 5250 4650
+NoConn ~ 6250 4150
+NoConn ~ 6250 4250
+NoConn ~ 6250 4350
+NoConn ~ 6250 4450
+NoConn ~ 6250 4550
+Text Notes 2700 6600 0    50   ~ 0
+PTS820J15MSMTRLFS
+Wire Notes Line
+	5000 4300 6500 4300
+Wire Wire Line
+	9000 2800 9750 2800
+Wire Wire Line
+	9000 2900 9750 2900
+Text Label 9000 2800 0    50   ~ 0
+ICE_DAT
+Text Label 6750 3550 2    50   ~ 0
+ICE_CLK
+Text Label 9000 2900 0    50   ~ 0
+ICE_CLK
+Text GLabel 9750 1500 2    50   Output ~ 0
+CAN0_TXD
+Text GLabel 9750 1600 2    50   Input ~ 0
+CAN0_RXD
+Text GLabel 9750 2300 2    50   Output ~ 0
+HIN
+Text GLabel 9750 2400 2    50   Output ~ 0
+LIN
+Text Label 6750 4050 2    50   ~ 0
+UART0_TXD
+Wire Wire Line
+	6250 4050 6750 4050
+Wire Wire Line
+	6750 3750 6250 3750
+Wire Wire Line
+	6750 3850 6250 3850
+Text Label 6750 3750 2    50   ~ 0
+PWM0_CH2
+Text Label 6750 3850 2    50   ~ 0
+PWM0_CH3
+Wire Wire Line
+	4750 3450 5250 3450
+Wire Wire Line
+	4750 3550 5250 3550
+Text Label 4750 3450 0    50   ~ 0
+CAN0_TXD
+Text Label 4750 3550 0    50   ~ 0
+CAN0_RXD
+Wire Wire Line
+	4750 3850 5250 3850
+Wire Wire Line
+	4750 3950 5250 3950
+Text Label 4750 3850 0    50   ~ 0
+ADC0_CH13
+Text Label 4750 3950 0    50   ~ 0
+ADC0_CH12
+Text Label 9000 2300 0    50   ~ 0
+PWM0_CH2
+Text Label 9000 2400 0    50   ~ 0
+PWM0_CH3
+NoConn ~ 6250 3650
+NoConn ~ 6250 3950
+Text GLabel 9750 2800 2    50   BiDi ~ 0
+PA0
+Text GLabel 9750 2900 2    50   BiDi ~ 0
+PA1
+Wire Wire Line
+	9000 1900 9750 1900
+Wire Wire Line
+	9000 2000 9750 2000
+Wire Wire Line
+	9000 2100 9750 2100
+Text Label 9000 2100 0    50   ~ 0
+nRST
+Text Label 9000 2000 0    50   ~ 0
+TS
+Text Label 9000 1900 0    50   ~ 0
+nSLP
+Wire Wire Line
+	9000 1800 9750 1800
+Text Label 9000 1800 0    50   ~ 0
+WAKE
+Text GLabel 9750 1800 2    50   Output ~ 0
+TCAN_WAKE
+Text GLabel 9750 1900 2    50   Output ~ 0
+TCAN_nSLP
+Text GLabel 9750 2000 2    50   Input ~ 0
+TCAN_TS
+Text GLabel 9750 2100 2    50   BiDi ~ 0
+TCAN_nRST
+Wire Wire Line
+	4750 3650 5250 3650
+Wire Wire Line
+	4750 3750 5250 3750
+Wire Wire Line
+	4750 4050 5250 4050
+Wire Wire Line
+	4750 4150 5250 4150
+Text Label 4750 3650 0    50   ~ 0
+WAKE
+Text Label 4750 3750 0    50   ~ 0
+nSLP
+Text Label 4750 4050 0    50   ~ 0
+TS
+Text Label 4750 4150 0    50   ~ 0
+nRST
+Text GLabel 9750 2600 2    50   Output ~ 0
+ISEN
+Text GLabel 9750 2500 2    50   Output ~ 0
+VFB
+Wire Wire Line
+	9000 2600 9750 2600
+Wire Wire Line
+	9000 2500 9750 2500
+Text Label 9000 2500 0    50   ~ 0
+ADC0_CH12
+Text Label 9000 2600 0    50   ~ 0
+ADC0_CH13
+$EndSCHEMATC

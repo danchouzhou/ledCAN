@@ -1,0 +1,8 @@
+(fp_lib_table
+  (lib (name TI_VSON-14_4.5x3.0mm_DMT0014B)(type KiCad)(uri ${KIPRJMOD}/TCAN1162x-Q1/TI_VSON-14_4.5x3.0mm_DMT0014B.pretty)(options "")(descr ""))
+  (lib (name QFN-10-1EP_3x3mm_P0.5mm_EP1.7x2.5mm)(type KiCad)(uri ${KIPRJMOD}/MPQ4569/QFN-10-1EP_3x3mm_P0.5mm_EP1.7x2.5mm.pretty)(options "")(descr ""))
+  (lib (name PANJIT_DFN)(type KiCad)(uri ${KIPRJMOD}/SYNC_BUCK/PANJIT_DFN.pretty)(options "")(descr ""))
+  (lib (name IO_CONN)(type KiCad)(uri ${KIPRJMOD}/SYNC_BUCK/IO_CONN.pretty)(options "")(descr ""))
+  (lib (name tya252010-series)(type KiCad)(uri ${KIPRJMOD}/MPQ4569/tya252010-series.pretty)(options "")(descr ""))
+  (lib (name Bourns_SRP1038AA)(type KiCad)(uri ${KIPRJMOD}/SYNC_BUCK/Bourns_SRP1038AA.pretty)(options "")(descr ""))
+)
