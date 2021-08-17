@@ -10,6 +10,6 @@ git clone https://github.com/MIH-pi/ledCAN.git --recurse-submodules
 
 ## Credits
 We are thankful that Nuvoton corporation (MCU),PANJIT (MOSFET), Texas Instruments (CAN SBC) provid samples and technical support.
-[link text itself]: www.nuvoton.com
-[link text itself]: www.panjit.com.tw
-[link text itself]: ti.com
+<www.nuvoton.com>
+<www.panjit.com.tw>
+<ti.com>
