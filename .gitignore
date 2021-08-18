@@ -1,3 +1,9 @@
+# Firmware
+*.o
+*.map
+*.axf
+*.bin
+
 datasheet
 reference
 
