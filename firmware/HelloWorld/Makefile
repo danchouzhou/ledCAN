@@ -13,17 +13,17 @@ LFLAGS=$(USE_NANO) $(USE_NOHOST) $(LDSCRIPTS) $(GC) $(MAP)
 
 #$(NAME)-$(CORE).axf: main.c $(NAME).c $(STARTUP)
 #	$(CC) $^ $(CFLAGS) $(LFLAGS) -o $@
-IPATH=	. \
-		../M0A21BSP/Library/CMSIS/Include \
-		../M0A21BSP/Library/Device/Nuvoton/M0A21/Include \
-		../M0A21BSP/Library/StdDriver/inc \
-		User
+IPATH= . \
+       ../M0A21BSP/Library/CMSIS/Include \
+       ../M0A21BSP/Library/Device/Nuvoton/M0A21/Include \
+       ../M0A21BSP/Library/StdDriver/inc \
+       User
 SRC=$(wildcard \
-		*.c \
-		../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/*.c \
-		../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/GCC/*.c \
-		../M0A21BSP/Library/StdDriver/src/*.c \
-		User/*.c \
+       *.c \
+       ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/*.c \
+       ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/GCC/*.c \
+       ../M0A21BSP/Library/StdDriver/src/*.c \
+       User/*.c \
 )
 OBJS = $(patsubst %.c,./Objects/%.o,$(SRC))
 
