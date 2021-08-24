@@ -1,9 +1,13 @@
+# Temporarily
+firmware/NeoPixelTest
+
 # Firmware
 *.o
 *.map
 *.axf
 *.bin
 
+# User specified
 datasheet
 reference
 
