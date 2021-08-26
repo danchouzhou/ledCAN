@@ -5,7 +5,7 @@
 
 ## Usage
 1. Build
-Output binary file will be in Objects folder after build. 
+Output binary file will be in the ``Objects`` folder after build. 
 ```
 cd to project directory
 make clean && make
