@@ -1,0 +1,12 @@
+# Firmware of the ledCAN module
+``M0A21BSP`` BSP submodule from Nuvoton corporation.
+``HelloWorld`` Project template for M0A21 serise.
+``ISP_CAN`` This is a loader firmware implement ISP function via CAN interface.
+
+## Usage
+1. Build
+Output binary file will be in Objects folder after build. 
+```
+cd to project directory
+make clean && make
+```
