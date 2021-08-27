@@ -13,7 +13,7 @@ git clone https://github.com/MIH-pi/ledCAN.git --recurse-submodules
 ```
 sudo apt install kicad build-essential gcc-arm-none-eabi libtool libusb-1.0-0-dev
 ```
-2. Build customize version of OpenOCD for Nuvoton devices follow by the instructions
+2. Build and install customize version of OpenOCD for Nuvoton devices
 ```
 git clone https://github.com/OpenNuvoton/OpenOCD-Nuvoton.git
 cd OpenOCD-Nuvoton
