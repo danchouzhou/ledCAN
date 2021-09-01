@@ -5,8 +5,8 @@ $Descr A4 11693 8268
 encoding utf-8
 Sheet 3 5
 Title "Multi purpose power converter module with CAN bus interface"
-Date "2021-08-04"
-Rev "1.0.0"
+Date "2021-08-31"
+Rev "1.1"
 Comp "DANCHOUZHOU"
 Comment1 "City Science - MIT Media Lab"
 Comment2 "danchouzhou@gmail.com"
