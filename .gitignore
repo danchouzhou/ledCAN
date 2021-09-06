@@ -1,11 +1,13 @@
 # Temporarily
 firmware/NeoPixelTest
+firmware/ADC_PWM_Trigger
 
 # Firmware
 *.o
 *.map
 *.axf
 *.bin
+.vscode
 
 # User specified
 datasheet
