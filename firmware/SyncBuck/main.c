@@ -13,6 +13,7 @@
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
 
 STR_PID_T PFM_PID = {0};
+STR_PID_T PWM_PID = {0};
 
 void SYS_Init(void)
 {
@@ -103,7 +104,8 @@ void PWM0_Init()
     PWM_SET_CMR(PWM0, 2, 0);
 
     /* Set PWM0 timer period */
-    PWM_SET_CNR(PWM0, 2, 2400);
+    PWM_SET_CNR(PWM0, 2, 2400); // PFM
+    //PWM_SET_CNR(PWM0, 2, 200); // PWM
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -161,16 +163,21 @@ void PID_Init()
     PID_SetPoint(&PFM_PID, 1365);
 
     PID_SetGain(&PFM_PID, -308, 0, 0);
+
+    PID_SetPoint(&PWM_PID, 1365);
+
+    PID_SetGain(&PWM_PID, 312, 0, 0);
 }
 
 void ADC_IRQHandler(void)
 {
-    int32_t i32ConversionData, i32Comp;
+    int32_t i32ConversionData, i32Comp, i32PFM, i32PWM;
 
     ADC_CLR_INT_FLAG(ADC, ADC_ADF_INT); /* Clear the A/D interrupt flag */
 #if 1
     if(ADC_IS_DATA_VALID(ADC, 12))
         i32ConversionData = ADC_GET_CONVERSION_DATA(ADC, 12);
+
 
     i32Comp = HDIV_Div(PID_GetCompValue(&PFM_PID, i32ConversionData), 10000);
 
@@ -193,12 +200,12 @@ void ADC_IRQHandler(void)
     //printf("Comp: %d\r\n", i32Comp);
 
     i32PWM = PWM_GET_CMR(PWM0, 2);
-    if ((i32PWM + i32Prop) > 100)
-        i32PWM = 100;
-    else if ((i32PWM + i32Prop) < 0)
+    if ((i32PWM + i32Comp) > 200)
+        i32PWM = 200;
+    else if ((i32PWM + i32Comp) < 0)
         i32PWM = 0;
     else
-        i32PWM += i32Prop;
+        i32PWM += i32Comp;
 
     //printf("PFM: %d\r\n", i32PFM);
 
