@@ -1,6 +1,5 @@
 # Temporarily
-firmware/NeoPixelTest
-firmware/ADC_PWM_Trigger
+
 
 # Firmware
 *.o
