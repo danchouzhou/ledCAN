@@ -8,11 +8,12 @@ extern "C"
 
 typedef struct
 {
+    /* Controller parameter */
     int32_t i32SetPoint;
     int32_t i32Kp;
     int32_t i32Ki;
     int32_t i32Kd;
-    /* */
+    /* variable */
     int32_t i32LastErr;
     int32_t i32Err;
     int32_t i32Int;
