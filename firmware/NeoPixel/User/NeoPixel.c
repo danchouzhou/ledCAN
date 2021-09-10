@@ -90,12 +90,13 @@ void NeoPixel_setPin(STR_NEOPIXEL_T *pNeoPixel, volatile uint32_t *pu32pdio)
     GPIO_T *port;
     int8_t pin;
 
+    /* Get port and pin from PDIO */
     port = (GPIO_T *)( ( ( (uint32_t)pu32pdio - GPIO_PIN_DATA_BASE) & 0x1C0) + PA_BASE);
     pin = ( ( (uint32_t)pu32pdio - GPIO_PIN_DATA_BASE) & 0x3F) >> 2;
 
     _GPIO_SET_PIN_MODE(port, pin, GPIO_MODE_OUTPUT);
 
-    *pu32pdio = 0;
+    *pu32pdio = 0; // PDIO output low
 
     pNeoPixel->pu32pdio = pu32pdio;
 }
@@ -127,7 +128,7 @@ uint8_t canShow(STR_NEOPIXEL_T *pNeoPixel)
     if (pNeoPixel->u32endTime > gu32msTicks) {
         pNeoPixel->u32endTime = gu32msTicks;
     }
-    return (gu32msTicks - pNeoPixel->u32endTime) >= 1L;
+    return (gu32msTicks - pNeoPixel->u32endTime) >= 1;
 }
 
 void NeoPixel_show(STR_NEOPIXEL_T *pNeoPixel)
@@ -178,11 +179,6 @@ void NeoPixel_show(STR_NEOPIXEL_T *pNeoPixel)
     __enable_irq();
 }
 
-void NeoPixel_clear(STR_NEOPIXEL_T *pNeoPixel)
-{
-    memset(pNeoPixel->pu8pixels, 0, pNeoPixel->u16numBytes);
-}
-
 void NeoPixel_setPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, uint8_t r, uint8_t g, uint8_t b)
 {
     if(n < pNeoPixel->u16numLEDs) {
@@ -202,4 +198,93 @@ void NeoPixel_setPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, uint8_t r, ui
         p[pNeoPixel->u8gOffset] = g;
         p[pNeoPixel->u8bOffset] = b;
     }
+}
+
+uint32_t NeoPixel_ColorHSV(uint16_t hue, uint8_t sat, uint8_t val)
+{
+    uint8_t r, g, b;
+
+    hue = (hue * 1530L + 32768) / 65536;
+
+    // Convert hue to R,G,B (nested ifs faster than divide+mod+switch):
+    if(hue < 510) {         // Red to Green-1
+        b = 0;
+        if(hue < 255) {     //   Red to Yellow-1
+            r = 255;
+            g = hue;        //     g = 0 to 254
+        } else {            //   Yellow to Green-1
+            r = 510 - hue;  //     r = 255 to 1
+            g = 255;
+        }
+    } else if(hue < 1020) { // Green to Blue-1
+        r = 0;
+        if(hue <  765) {    //   Green to Cyan-1
+            g = 255;
+            b = hue - 510;  //     b = 0 to 254
+        } else {            //   Cyan to Blue-1
+        g = 1020 - hue;     //     g = 255 to 1
+        b = 255;
+        }
+    } else if(hue < 1530) { // Blue to Red-1
+        g = 0;
+        if(hue < 1275) {    //   Blue to Magenta-1
+            r = hue - 1020; //     r = 0 to 254
+            b = 255;
+        } else {            //   Magenta to Red-1
+            r = 255;
+            b = 1530 - hue; //     b = 255 to 1
+        }
+    } else {                // Last 0.5 Red (quicker than % operator)
+        r = 255;
+        g = b = 0;
+    }
+
+    // Apply saturation and value to R,G,B, pack into 32-bit result:
+    uint32_t v1 =   1 + val; // 1 to 256; allows >>8 instead of /255
+    uint16_t s1 =   1 + sat; // 1 to 256; same reason
+    uint8_t  s2 = 255 - sat; // 255 to 0
+    return ((((((r * s1) >> 8) + s2) * v1) & 0xff00) << 8) |
+            (((((g * s1) >> 8) + s2) * v1) & 0xff00)       |
+            ( ((((b * s1) >> 8) + s2) * v1)           >> 8);
+}
+
+void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b)
+{
+    uint8_t newBrightness = b + 1;
+    if(newBrightness != pNeoPixel->u8brightness) {
+        uint8_t  c,
+                *ptr           = pNeoPixel->pu8pixels,
+                 oldBrightness = pNeoPixel->u8brightness - 1; // De-wrap old brightness value
+        uint16_t scale;
+        if(oldBrightness == 0) scale = 0; // Avoid /0
+        else if(b == 255) scale = 65535 / oldBrightness;
+        else scale = (((uint16_t)newBrightness << 8) - 1) / oldBrightness;
+        for(uint16_t i=0; i<pNeoPixel->u16numBytes; i++) {
+        c      = *ptr;
+        *ptr++ = (c * scale) >> 8;
+        }
+        pNeoPixel->u8brightness = newBrightness;
+  }
+}
+
+void NeoPixel_clear(STR_NEOPIXEL_T *pNeoPixel)
+{
+    memset(pNeoPixel->pu8pixels, 0, pNeoPixel->u16numBytes);
+}
+
+// A 32-bit variant of gamma8() that applies the same function
+// to all components of a packed RGB or WRGB value.
+uint32_t NeoPixel_gamma32(uint32_t x)
+{
+    uint8_t *y = (uint8_t *)&x;
+    // All four bytes of a 32-bit value are filtered even if RGB (not WRGB),
+    // to avoid a bunch of shifting and masking that would be necessary for
+    // properly handling different endianisms (and each byte is a fairly
+    // trivial operation, so it might not even be wasting cycles vs a check
+    // and branch for the RGB case). In theory this might cause trouble *if*
+    // someone's storing information in the unused most significant byte
+    // of an RGB value, but this seems exceedingly rare and if it's
+    // encountered in reality they can mask values going in or coming out.
+    for(uint8_t i=0; i<4; i++) y[i] = NeoPixel_gamma8(y[i]);
+    return x; // Packed 32-bit return
 }
