@@ -27,11 +27,14 @@ SRC=$(wildcard \
 )
 OBJS = $(patsubst %.c,./Objects/%.o,$(SRC))
 
-$(NAME): $(SRC)
+$(NAME): $(OBJS)
 	mkdir -p ./Objects
-	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
 	cd ./Objects && $(CC) *.o $(CFLAGS) $(LFLAGS) $(STARTUP) -o $@.axf $(addprefix -I ../,$(IPATH)) 
 	$(CP) -O binary ./Objects/$@.axf ./Objects/$@.bin
+
+$(OBJS): $(SRC)
+	mkdir -p ./Objects
+	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
 
 .PHONY: all clean
 
