@@ -2,6 +2,8 @@
 ``M0A21BSP`` BSP submodule from Nuvoton corporation. <br>
 ``HelloWorld`` Project template for M0A21 serise. <br>
 ``ISP_CAN`` This is a loader firmware implement ISP function via CAN interface. <br>
+``SyncBuck`` This is a buck converter test code with PID controller. <br>
+``NeoPixel`` This is a NeoPixel strandtest with a modified version of ``Adafruit_NeoPixel`` library. <br>
 
 ## Usage
 1. Build
