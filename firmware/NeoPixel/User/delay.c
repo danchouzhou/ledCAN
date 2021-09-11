@@ -64,12 +64,6 @@ void delayMicroseconds(uint32_t u32usDelay)
         SysTick->LOAD = 0xFFFFFF; // Set to maximum of 2^24
         SysTick->VAL  = (0x00);
         SysTick->CTRL = SysTick_CTRL_CLKSOURCE_Msk | SysTick_CTRL_ENABLE_Msk;
-
-        for(uint32_t i=0; i<1000; i++)
-        {
-            /* Waiting for down-count to zero */
-            while ((SysTick->CTRL & SysTick_CTRL_COUNTFLAG_Msk) == 0);
-        }
     }
 
     /* Disable SysTick counter */
