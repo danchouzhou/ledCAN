@@ -24,4 +24,4 @@ sudo make install
 ```
 
 ## Credits
-We are thankful that [Nuvoton corporation](https://www.nuvoton.com) (MCU),[PANJIT](https://www.panjit.com.tw) (MOSFET), [EDOM Technology](https://www.edomtech.com) (MPS MPQ4569GQ) and [Texas Instruments](https://ti.com) (CAN SBC) provid samples and technical support.
+We are thankful that [Nuvoton corporation](https://www.nuvoton.com) (MCU),[PANJIT](https://www.panjit.com.tw) (MOSFET), [EDOM Technology](https://www.edomtech.com) (MPS MPQ4569GQ) and [Texas Instruments](https://ti.com) (CAN SBC) provide samples and technical support.
