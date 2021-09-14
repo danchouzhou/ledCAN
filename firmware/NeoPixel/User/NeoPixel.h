@@ -189,17 +189,32 @@ int32_t NeoPixel_begin(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, volatile uint32_t 
 uint8_t canShow(STR_NEOPIXEL_T *pNeoPixel);
 void NeoPixel_show(STR_NEOPIXEL_T *pNeoPixel);
 void NeoPixel_setPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, uint8_t r, uint8_t g, uint8_t b);
+void NeoPixel_fill(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, uint16_t first, uint16_t count);
 uint32_t NeoPixel_ColorHSV(uint16_t hue, uint8_t sat, uint8_t val);
+uint32_t NeoPixel_getPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n);
 void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b);
+uint8_t NeoPixel_getBrightness(STR_NEOPIXEL_T *pNeoPixel);
 void NeoPixel_clear(STR_NEOPIXEL_T *pNeoPixel);
 uint32_t NeoPixel_gamma32(uint32_t x);
+
+__STATIC_INLINE uint8_t *getPixels(STR_NEOPIXEL_T *pNeoPixel) {
+    return pNeoPixel->pu8pixels;
+}
+
+__STATIC_INLINE volatile uint32_t *getPin(STR_NEOPIXEL_T *pNeoPixel) {
+    return pNeoPixel->pu32pdio;
+}
 
 __STATIC_INLINE uint16_t NeoPixel_numPixels(STR_NEOPIXEL_T *pNeoPixel) {
     return pNeoPixel->u16numLEDs;
 }
 
+__STATIC_INLINE uint8_t NeoPixel_sine8(uint8_t x) {
+    return _NeoPixelSineTable[x]; // 0-255 in, 0-255 out
+}
+
 __STATIC_INLINE uint8_t NeoPixel_gamma8(uint8_t x) {
-return _NeoPixelGammaTable[x]; // 0-255 in, 0-255 out
+    return _NeoPixelGammaTable[x]; // 0-255 in, 0-255 out
 }
 
 #ifdef __cplusplus

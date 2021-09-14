@@ -200,6 +200,29 @@ void NeoPixel_setPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, uint8_t r, ui
     }
 }
 
+void NeoPixel_fill(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, uint16_t first, uint16_t count)
+{
+    uint16_t i, end;
+
+    if(first >= pNeoPixel->u16numLEDs) {
+        return; // If first LED is past end of strip, nothing to do
+    }
+
+    // Calculate the index ONE AFTER the last pixel to fill
+    if(count == 0) {
+        // Fill to end of strip
+        end = pNeoPixel->u16numLEDs;
+    } else {
+        // Ensure that the loop won't go past the last pixel
+        end = first + count;
+        if(end > pNeoPixel->u16numLEDs) end = pNeoPixel->u16numLEDs;
+    }
+
+    for(i = first; i < end; i++) {
+        etPixelColor(pNeoPixel, i, r, g, b);
+    }
+}
+
 uint32_t NeoPixel_ColorHSV(uint16_t hue, uint8_t sat, uint8_t val)
 {
     uint8_t r, g, b;
@@ -248,6 +271,45 @@ uint32_t NeoPixel_ColorHSV(uint16_t hue, uint8_t sat, uint8_t val)
             ( ((((b * s1) >> 8) + s2) * v1)           >> 8);
 }
 
+uint32_t NeoPixel_getPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n)
+{
+    if(n >= pNeoPixel->u16numLEDs) return 0; // Out of bounds, return no color.
+
+    uint8_t *p;
+
+    if(pNeoPixel->u8wOffset == pNeoPixel->u8rOffset) { // Is RGB-type device
+        p = &pNeoPixel->pu8pixels[n * 3];
+        if(pNeoPixel->u8brightness) {
+            // Stored color was decimated by setBrightness(). Returned value
+            // attempts to scale back to an approximation of the original 24-bit
+            // value used when setting the pixel color, but there will always be
+            // some error -- those bits are simply gone. Issue is most
+            // pronounced at low brightness levels.
+            return  (((uint32_t)(p[pNeoPixel->u8rOffset] << 8) / pNeoPixel->u8brightness) << 16) |
+                    (((uint32_t)(p[pNeoPixel->u8gOffset] << 8) / pNeoPixel->u8brightness) <<  8) |
+                    ( (uint32_t)(p[pNeoPixel->u8bOffset] << 8) / pNeoPixel->u8brightness       );
+            } else {
+            // No brightness adjustment has been made -- return 'raw' color
+            return  ((uint32_t)p[pNeoPixel->u8rOffset] << 16) |
+                    ((uint32_t)p[pNeoPixel->u8gOffset] <<  8) |
+                     (uint32_t)p[pNeoPixel->u8bOffset];
+        }
+    } else {                 // Is RGBW-type device
+        p = &pNeoPixel->pu8pixels[n * 4];
+        if(pNeoPixel->u8brightness) { // Return scaled color
+            return  (((uint32_t)(p[pNeoPixel->u8wOffset] << 8) / pNeoPixel->u8brightness) << 24) |
+                    (((uint32_t)(p[pNeoPixel->u8rOffset] << 8) / pNeoPixel->u8brightness) << 16) |
+                    (((uint32_t)(p[pNeoPixel->u8gOffset] << 8) / pNeoPixel->u8brightness) <<  8) |
+                    ( (uint32_t)(p[pNeoPixel->u8bOffset] << 8) / pNeoPixel->u8brightness       );
+            } else { // Return raw color
+            return  ((uint32_t)p[pNeoPixel->u8wOffset] << 24) |
+                    ((uint32_t)p[pNeoPixel->u8rOffset] << 16) |
+                    ((uint32_t)p[pNeoPixel->u8gOffset] <<  8) |
+                     (uint32_t)p[pNeoPixel->u8bOffset];
+        }
+    }
+}
+
 void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b)
 {
     uint8_t newBrightness = b + 1;
@@ -265,6 +327,11 @@ void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b)
         }
         pNeoPixel->u8brightness = newBrightness;
   }
+}
+
+uint8_t NeoPixel_getBrightness(STR_NEOPIXEL_T *pNeoPixel)
+{
+    return pNeoPixel->u8brightness - 1;
 }
 
 void NeoPixel_clear(STR_NEOPIXEL_T *pNeoPixel)
