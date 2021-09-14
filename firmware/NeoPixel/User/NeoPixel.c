@@ -114,7 +114,7 @@ int32_t NeoPixel_begin(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, volatile uint32_t 
     NeoPixel_updateLength(pNeoPixel, n);    // Number of pixels
     NeoPixel_setPin(pNeoPixel, p);          // Pointer of the GPIO Px.n Pin Data Input/Outut Register (Pxn_PDIO)
 
-    /* Configure SysTick to generate an interrupt every microsecond */
+    /* Configure SysTick to generate an interrupt every millisecond */
     returnCode = SysTick_Config(SystemCoreClock / 1000);
 
     if (returnCode == 0)
@@ -269,7 +269,7 @@ uint32_t NeoPixel_ColorHSV(uint16_t hue, uint8_t sat, uint8_t val)
     uint8_t  s2 = 255 - sat; // 255 to 0
     return ((((((r * s1) >> 8) + s2) * v1) & 0xff00) << 8) |
             (((((g * s1) >> 8) + s2) * v1) & 0xff00)       |
-            ( ((((b * s1) >> 8) + s2) * v1)           >> 8);
+            (((((b * s1) >> 8) + s2) * v1)           >> 8);
 }
 
 uint32_t NeoPixel_getPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n)
@@ -323,8 +323,8 @@ void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b)
         else if(b == 255) scale = 65535 / oldBrightness;
         else scale = (((uint16_t)newBrightness << 8) - 1) / oldBrightness;
         for(uint16_t i=0; i<pNeoPixel->u16numBytes; i++) {
-        c      = *ptr;
-        *ptr++ = (c * scale) >> 8;
+             c     = *ptr;
+            *ptr++ = (c * scale) >> 8;
         }
         pNeoPixel->u8brightness = newBrightness;
     }
