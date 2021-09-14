@@ -176,6 +176,7 @@ void NeoPixel_show(STR_NEOPIXEL_T *pNeoPixel)
     SysTick->LOAD = saveLoad;          // Restore SysTick rollover to 1 ms
     SysTick->VAL  = saveVal;           // Restore SysTick value
 
+    /* Turn the interrupt back */
     __enable_irq();
 }
 
@@ -183,16 +184,16 @@ void NeoPixel_setPixelColor(STR_NEOPIXEL_T *pNeoPixel, uint16_t n, uint8_t r, ui
 {
     if(n < pNeoPixel->u16numLEDs) {
         if(pNeoPixel->u8brightness) { // See notes in setBrightness()
-        r = (r * pNeoPixel->u8brightness) >> 8;
-        g = (g * pNeoPixel->u8brightness) >> 8;
-        b = (b * pNeoPixel->u8brightness) >> 8;
+            r = (r * pNeoPixel->u8brightness) >> 8;
+            g = (g * pNeoPixel->u8brightness) >> 8;
+            b = (b * pNeoPixel->u8brightness) >> 8;
         }
         uint8_t *p;
         if(pNeoPixel->u8wOffset == pNeoPixel->u8rOffset) { // Is an RGB-type strip
-        p = &pNeoPixel->pu8pixels[n * 3];   // 3 bytes per pixel
-        } else {                            // Is a WRGB-type strip
-        p = &pNeoPixel->pu8pixels[n * 4];   // 4 bytes per pixel
-        p[pNeoPixel->u8wOffset] = 0;        // But only R,G,B passed -- set W to 0
+            p = &pNeoPixel->pu8pixels[n * 3];   // 3 bytes per pixel
+        } else {                                // Is a WRGB-type strip
+            p = &pNeoPixel->pu8pixels[n * 4];   // 4 bytes per pixel
+            p[pNeoPixel->u8wOffset] = 0;        // But only R,G,B passed -- set W to 0
         }
         p[pNeoPixel->u8rOffset] = r;        // R,G,B always stored
         p[pNeoPixel->u8gOffset] = g;
@@ -326,7 +327,7 @@ void NeoPixel_setBrightness(STR_NEOPIXEL_T *pNeoPixel, uint8_t b)
         *ptr++ = (c * scale) >> 8;
         }
         pNeoPixel->u8brightness = newBrightness;
-  }
+    }
 }
 
 uint8_t NeoPixel_getBrightness(STR_NEOPIXEL_T *pNeoPixel)
