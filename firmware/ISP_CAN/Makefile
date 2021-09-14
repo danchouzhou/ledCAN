@@ -25,7 +25,7 @@ SRC=$(wildcard \
        ../M0A21BSP/Library/StdDriver/src/fmc.c \
        User/*.c \
 )
-OBJS = $(patsubst %.c,./Objects/%.o,$(SRC))
+OBJS = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
 
 $(NAME): $(OBJS)
 	mkdir -p ./Objects
