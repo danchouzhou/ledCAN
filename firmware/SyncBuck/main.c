@@ -101,7 +101,7 @@ void PWM0_Init()
     PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE2_Msk)) | (PWM_DOWN_COUNTER << PWM_CTL1_CNTTYPE2_Pos);
 
     /* Set PWM0 timer duty */
-    PWM_SET_CMR(PWM0, 2, 0);
+    PWM_SET_CMR(PWM0, 2, 24);
 
     /* Set PWM0 timer period */
     PWM_SET_CNR(PWM0, 2, 2400); // PFM
@@ -111,7 +111,7 @@ void PWM0_Init()
     SYS_UnlockReg();
 
     /* Set PWM0 dead-time */
-    PWM_EnableDeadZone(PWM0, 2, 6);
+    PWM_EnableDeadZone(PWM0, 2, 4);
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -250,7 +250,7 @@ int main()
     PWM0_Init();
 
     /* Set PWM0 timer duty */
-    PWM_SET_CMR(PWM0, 2, 26);
+    //PWM_SET_CMR(PWM0, 2, 27);
 
     /* Initial PID controller */
     PID_Init();
