@@ -220,7 +220,7 @@ void NeoPixel_fill(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, u
     }
 
     for(i = first; i < end; i++) {
-        etPixelColor(pNeoPixel, i, r, g, b);
+        NeoPixel_setPixelColor(pNeoPixel, i, r, g, b);
     }
 }
 
