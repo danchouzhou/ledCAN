@@ -5,7 +5,7 @@
 ``SyncBuck`` This is a buck converter test code with PID controller. <br>
 ``NeoPixel`` This is a NeoPixel strandtest with a modified version of ``Adafruit_NeoPixel`` library. <br>
 ``CAN_TxRx`` This is a CAN test code for mode and color select. <br>
-``DataFlashRead`` This is a data flash read and config bits auto setup for CAN 2.0A ID setup. <br>
+``FlashConfig`` This is a code for config bits setup and accessing data flash. <br>
 
 ## Usage
 1. Build
