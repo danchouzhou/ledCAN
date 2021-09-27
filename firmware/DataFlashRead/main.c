@@ -11,14 +11,14 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
-#define APROM_TEST_BASE             0x3000
-#define DATA_FLASH_TEST_BASE        0x3000
-#define DATA_FLASH_TEST_END         0x4000      /* 16KB */
-#define TEST_PATTERN                0x5A5A5A5A
-
-uint32_t APROM_TEST_END  = 0x00004000UL;        /* 16KB */
-uint32_t LDROM_TEST_SIZE = 0x00000800UL;        /*  2KB */
-uint32_t LDROM_TEST_END  = 0x00100800UL;
+#define DATA_FLASH_BASE     0x7E00
+#define DATA_FLASH_END      0x7FFF      /* 512B */
+#define TEST_PATTERN        0x5A5A5A5A
+/* CONFIG0: Enable data flash. */
+/* This value need to be change into 0xFDFFFDFE in final product to disable reset pin and extern POR to 26.6ms */
+#define CONFIG0             0xFFFFFFFE
+/* CONFIG1: Set Data Flash Base Address to 0x7E00 (size 512 bytes) */
+#define CONFIG1             DATA_FLASH_BASE
 
 int IsDebugFifoEmpty(void);
 
@@ -53,9 +53,9 @@ void SYS_Init(void)
     SYS_LockReg();
 }
 
-static int  set_data_flash_base(uint32_t u32DFBA)
+int check_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
 {
-    uint32_t   au32Config[2];
+    uint32_t au32Config[2];
 
     /* Read User Configuration 0 & 1 */
     if (FMC_ReadConfig(au32Config, 2) < 0)
@@ -65,28 +65,36 @@ static int  set_data_flash_base(uint32_t u32DFBA)
     }
 
     /* Check if Data Flash is enabled (CONFIG0[0]) and is expected address (CONFIG1) */
-    if ((!(au32Config[0] & 0x1)) && (au32Config[1] == u32DFBA))
+    if (((au32Config[0] == u32Cfg0)) && (au32Config[1] == u32Cfg1))
         return 0;
+
+    return -1;
+}
+
+int set_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
+{
+    uint32_t au32Config[2];
 
     FMC_ENABLE_CFG_UPDATE();
 
     /* Erase User Configuration */
     FMC_Erase(FMC_CONFIG_BASE);
 
-    au32Config[0] &= ~0x1;         /* CONFIG0[0] = 0 (Enabled) / 1 (Disabled) */
-    au32Config[1] = u32DFBA;
+    au32Config[0] = u32Cfg0;         /* CONFIG0[0] = 0 (Enabled) / 1 (Disabled) */
+    au32Config[1] = u32Cfg1;
 
     /* Update User Configuration settings. */
     if (FMC_WriteConfig(au32Config, 2) < 0)
         return -1;
-
-    printf("\nSet Data Flash base as 0x%x.\n", DATA_FLASH_TEST_BASE);
+    
+    printf("\nSet Data Flash base as 0x%x.\n", DATA_FLASH_BASE);
 
     /* To check if all the debug messages are finished */
     while(!IsDebugFifoEmpty());
 
     /* Perform chip reset to make new User Config take effect */
     SYS->IPRST0 = SYS_IPRST0_CHIPRST_Msk;
+
     return 0;
 }
 
@@ -95,17 +103,9 @@ void run_crc32_checksum()
 {
     uint32_t    chksum;
 
-    chksum = FMC_GetChkSum(FMC_APROM_BASE, DATA_FLASH_TEST_BASE - FMC_APROM_BASE);
+    chksum = FMC_GetChkSum(FMC_APROM_BASE, DATA_FLASH_BASE - FMC_APROM_BASE);
 
     printf("  APROM CRC32 checksum .................. [0x%08x]\n", chksum);
-
-    chksum = FMC_GetChkSum(DATA_FLASH_TEST_BASE, APROM_TEST_END - DATA_FLASH_TEST_BASE);
-
-    printf("  Data Flash CRC32 checksum ............. [0x%08x]\n", chksum);
-
-    chksum = FMC_GetChkSum(FMC_LDROM_BASE, LDROM_TEST_SIZE);
-
-    printf("  LDROM CRC32 checksum .................. [0x%08x]\n", chksum);
 }
 
 
@@ -170,15 +170,6 @@ int32_t  flash_test(uint32_t u32StartAddr, uint32_t u32EndAddr, uint32_t u32Patt
             printf("\nData verify failed!\n ");
             return -1;
         }
-
-        FMC_Erase(u32Addr);
-
-        /* Verify if page contents are all 0xFFFFFFFF */
-        if (verify_data(u32Addr, u32Addr + FMC_FLASH_PAGE_SIZE, 0xFFFFFFFF) < 0)
-        {
-            printf("\nPage 0x%x erase verify failed!\n", u32Addr);
-            return -1;
-        }
     }
     printf("\r    Flash Test Passed.          \n");
     return 0;
@@ -209,11 +200,16 @@ int main()
     FMC_Open();
 
     /* Enable Data Flash and set base address. */
-    if (set_data_flash_base(DATA_FLASH_TEST_BASE) < 0)
+    if (check_config_bits(CONFIG0, CONFIG1) < 0)
     {
-        printf("Failed to set Data Flash base address!\n");
-        goto lexit;
+        if(set_config_bits(CONFIG0, CONFIG1))
+        {
+            printf("Failed to set Data Flash base address!\n");
+            goto lexit;
+        }
     }
+
+    printf("Config bits check passed.\r\n");
 
     /* Read BS */
     printf("  Boot Mode ............................. ");
@@ -254,26 +250,8 @@ int main()
 
     run_crc32_checksum();
 
-    printf("\n\nLDROM test =>\n");
-    FMC_ENABLE_LD_UPDATE();
-    if (flash_test(FMC_LDROM_BASE, LDROM_TEST_END, TEST_PATTERN) < 0)
-    {
-        printf("\n\nLDROM test failed!\n");
-        goto lexit;
-    }
-    FMC_DISABLE_LD_UPDATE();
-
-    printf("\n\nAPROM test =>\n");
-    FMC_ENABLE_AP_UPDATE();
-    if (flash_test(APROM_TEST_BASE, DATA_FLASH_TEST_BASE, TEST_PATTERN) < 0)
-    {
-        printf("\n\nAPROM test failed!\n");
-        goto lexit;
-    }
-    FMC_DISABLE_AP_UPDATE();
-
     printf("\n\nData Flash test =>\n");
-    if (flash_test(DATA_FLASH_TEST_BASE, DATA_FLASH_TEST_END, TEST_PATTERN) < 0)
+    if (flash_test(DATA_FLASH_BASE, DATA_FLASH_END, TEST_PATTERN) < 0)
     {
         printf("\n\nData flash read/write test failed!\n");
         goto lexit;
