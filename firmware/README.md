@@ -4,6 +4,8 @@
 ``ISP_CAN`` This is a loader firmware implement ISP function via CAN interface. <br>
 ``SyncBuck`` This is a buck converter test code with PID controller. <br>
 ``NeoPixel`` This is a NeoPixel strandtest with a modified version of ``Adafruit_NeoPixel`` library. <br>
+``CAN_TxRx`` This is a CAN test code for mode and color select. <br>
+``FMC_RW`` This is a data flash read for CAN 2.0A ID select. <br>
 
 ## Usage
 1. Build
