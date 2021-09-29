@@ -134,9 +134,6 @@ void SYS_Init(void)
 
 void CAN_Init(CAN_T *tCAN)
 {
-    /* Enable IP clock */
-    CLK->APBCLK0 |= CLK_APBCLK0_CAN0CKEN_Msk;
-    
     if(CAN_Open(tCAN,  500000, CAN_NORMAL_MODE) < 0)
         printf("Set CAN bit rate is fail\n");
 
