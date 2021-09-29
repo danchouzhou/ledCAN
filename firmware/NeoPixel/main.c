@@ -65,7 +65,7 @@ void SYS_Init(void)
 
 int main()
 {
-    /* Create a NeoPixel objects */
+    /* Create a NeoPixel object */
     STR_NEOPIXEL_T pixels;
 
     SYS_Init();
