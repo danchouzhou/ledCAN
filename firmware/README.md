@@ -6,6 +6,7 @@
 ``NeoPixel`` This is a NeoPixel strandtest with a modified version of ``Adafruit_NeoPixel`` library. <br>
 ``CAN_TxRx`` This is a CAN test code for mode and color select. <br>
 ``FlashConfig`` This is a code for config bits setup and accessing data flash. <br>
+``ledCAN`` The full function firmware for final product. <br>
 
 ## Usage
 1. Build
