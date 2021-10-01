@@ -163,7 +163,6 @@ void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 
 int main()
 {
-    int i16StartPix = 0;
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -204,7 +203,7 @@ int main()
                     break;
                 case 1: // fill, numberOfLEDs, r, g, b
                     updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     NeoPixel_show(&pixels);
                     break;
                 case 2: // wipe, numberOfLEDs, r, g, b, interval (ms)
@@ -213,7 +212,7 @@ int main()
                     break;
                 case 3: // blink, numberOfLEDs, r, g, b, delay (second*10)
                     updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     NeoPixel_show(&pixels);
                     delay(modeMsg.Data[5]*10);
                     NeoPixel_clear(&pixels);
@@ -224,7 +223,7 @@ int main()
                     for(int i=0; i<256; i+=((modeMsg.Data[5]>3)?1:5)) // Increase 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
                         delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
@@ -232,16 +231,22 @@ int main()
                     for(int i=255; i>=0; i-=((modeMsg.Data[5]>3)?1:5)) // Decrease 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
                         delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
                     }
+                    NeoPixel_clear(&pixels);
                     NeoPixel_setBrightness(&pixels, 255);
                     break;
                 case 5: // snake scroll, numberOfLEDs, r, g, b, 
+                    if(modeMsg.Data[1] != NeoPixel_numPixels(&pixels))
+                    {
+                        NeoPixel_clear(&pixels);
+                        NeoPixel_show(&pixels);
+                    }
                     updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     for(int i=0; i<NeoPixel_numPixels(&pixels); i++)
                     {
                         if(i<modeMsg.Data[5])
@@ -271,7 +276,7 @@ int main()
                         delay(modeMsg.Data[6]);
                     }
                     break;
-                case 6: // Send PA0 ADC value every 
+                case 6: // Send PA0 ADC value every 10ms
                     break;
                 
                 default: 
