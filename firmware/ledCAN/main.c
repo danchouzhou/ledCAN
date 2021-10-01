@@ -163,6 +163,7 @@ void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 
 int main()
 {
+    int i16StartPix = 0;
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -197,6 +198,7 @@ int main()
             
             switch (modeMsg.Data[0]) {
                 case 0: // idel
+                    updateLen(&pixels, modeMsg.Data[1]);
                     NeoPixel_clear(&pixels);
                     NeoPixel_show(&pixels);
                     break;
@@ -209,7 +211,7 @@ int main()
                     updateLen(&pixels, modeMsg.Data[1]);
                     colorWipe(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], modeMsg.Data[5]);
                     break;
-                case 3: // blink, numberOfLEDs, r, g, b, delay (seconds*10)
+                case 3: // blink, numberOfLEDs, r, g, b, delay (second*10)
                     updateLen(&pixels, modeMsg.Data[1]);
                     NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
                     NeoPixel_show(&pixels);
@@ -217,7 +219,60 @@ int main()
                     NeoPixel_clear(&pixels);
                     NeoPixel_show(&pixels);
                     break;
-                
+                case 4: // breath, numberOfLEDs, r, g, b, period (second)
+                    updateLen(&pixels, modeMsg.Data[1]);
+                    for(int i=0; i<256; i+=((modeMsg.Data[5]>3)?1:5)) // Increase 5 if period <= 3 seconds
+                    {
+                        NeoPixel_setBrightness(&pixels, i);
+                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                        NeoPixel_show(&pixels);
+                        //delay((uint32_t)modeMsg.Data[5]*1000/512);
+                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
+                    }
+                    for(int i=255; i>=0; i-=((modeMsg.Data[5]>3)?1:5)) // Decrease 5 if period <= 3 seconds
+                    {
+                        NeoPixel_setBrightness(&pixels, i);
+                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                        NeoPixel_show(&pixels);
+                        //delay((uint32_t)modeMsg.Data[5]*1000/512);
+                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
+                    }
+                    NeoPixel_setBrightness(&pixels, 255);
+                    break;
+                case 5: // snake scroll, numberOfLEDs, r, g, b, 
+                    updateLen(&pixels, modeMsg.Data[1]);
+                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels) - 1);
+                    for(int i=0; i<NeoPixel_numPixels(&pixels); i++)
+                    {
+                        if(i<modeMsg.Data[5])
+                        {
+                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
+                        }
+                        else
+                        {
+                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
+                            NeoPixel_setPixelColor(&pixels, i-modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
+                        }
+                        NeoPixel_show(&pixels);
+                        delay(modeMsg.Data[6]);
+                    }
+                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[5]; i>=-(int)modeMsg.Data[5]; i--)
+                    {
+                        if(i<0)
+                        {
+                            NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
+                        }
+                        else
+                        {
+                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
+                            NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
+                        }
+                        NeoPixel_show(&pixels);
+                        delay(modeMsg.Data[6]);
+                    }
+                    break;
+                case 6: // Send PA0 ADC value every 
+                    break;
                 
                 default: 
                     break;
