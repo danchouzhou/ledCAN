@@ -239,7 +239,7 @@ int main()
                     NeoPixel_clear(&pixels);
                     NeoPixel_setBrightness(&pixels, 255);
                     break;
-                case 5: // snake scroll, numberOfLEDs, r, g, b, 
+                case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
                     if(modeMsg.Data[1] != NeoPixel_numPixels(&pixels))
                     {
                         NeoPixel_clear(&pixels);
