@@ -156,7 +156,7 @@ void SYS_Init(void)
     /* Enable CAN0 clock */
     CLK_EnableModuleClock(CAN0_MODULE);
 
-	/* Enable PWM0 module clock */
+    /* Enable PWM0 module clock */
     CLK_EnableModuleClock(PWM0_MODULE);
 
     /* Reset PWM0 module */
@@ -227,9 +227,6 @@ void PWM0_Init()
     /* Set Pwm mode as complementary mode */
     PWM_ENABLE_COMPLEMENTARY_MODE(PWM0);
 
-    /* PWM0 channel 2 frequency is 480000 Hz, duty 0%, */
-    //PWM_ConfigOutputChannel(PWM0, 2, 480000, 0);
-
     /* Set PWM0 timer clock prescaler */
     PWM_SET_PRESCALER(PWM0, 2, 0);
 
@@ -241,7 +238,6 @@ void PWM0_Init()
 
     /* Set PWM0 timer period */
     PWM_SET_CNR(PWM0, 2, 2400); // PFM
-    //PWM_SET_CNR(PWM0, 2, 200); // PWM
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -251,9 +247,6 @@ void PWM0_Init()
 
     /* Lock protected registers */
     SYS_LockReg();
-
-    /* PWM period point trigger ADC enable */
-    //PWM_EnableADCTrigger(PWM0, 2, PWM_TRIGGER_ADC_EVEN_PERIOD_POINT);
 
     /* Set output level at zero, compare up, period(center) and compare down of specified channel */
     PWM_SET_OUTPUT_LEVEL(PWM0, BIT2, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING, PWM_OUTPUT_LOW, PWM_OUTPUT_HIGH);
@@ -283,7 +276,7 @@ void ADC_Init()
 
 void TIMER0_Init()
 {
-    /* Set timer0 periodic time-out frequency is 200KHz */
+    /* Set timer0 periodic time-out frequency is 20KHz */
     TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 20000);
 
     /* Enable timer interrupt trigger ADC */
