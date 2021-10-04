@@ -2,8 +2,9 @@
 #include "NuMicro.h"
 #include "NeoPixel.h"
 #include "delay.h"
+#include "pid.h"
 
-#define LED_PIN     PD6
+#define LED_PIN     PA0
 
 /* Create a NeoPixel object */
 STR_NEOPIXEL_T pixels;
@@ -14,7 +15,36 @@ void colorWipe(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, int w
 STR_CANMSG_T rrMsg;
 STR_CANMSG_T modeMsg;
 
+STR_PID_T PFM_PID = {0};
+
 volatile uint32_t g_u32SyncFlag = 0;
+
+void ADC_IRQHandler(void)
+{
+    int32_t i32ConversionData, i32Comp, i32PFM, i32PWM;
+
+    ADC_CLR_INT_FLAG(ADC, ADC_ADF_INT); /* Clear the A/D interrupt flag */
+
+    if(ADC_IS_DATA_VALID(ADC, 12))
+        i32ConversionData = ADC_GET_CONVERSION_DATA(ADC, 12);
+
+
+    i32Comp = HDIV_Div(PID_GetCompValue(&PFM_PID, i32ConversionData), 10000);
+
+    //printf("Comp: %d\r\n", i32Comp);
+
+    i32PFM = PWM_GET_CNR(PWM0, 2); // Get current period value
+    if ((i32PFM + i32Comp) > 2400)
+        i32PFM = 2400; // Min freq=20KHz
+    else if ((i32PFM + i32Comp) < 100)
+        i32PFM = 100; // Max freq=480KHz
+    else
+        i32PFM += i32Comp;
+
+    //printf("PFM: %d\r\n", i32PFM);
+
+    PWM_SET_CNR(PWM0, 2, i32PFM);
+}
 
 void CAN_ShowMsg(STR_CANMSG_T* Msg)
 {
@@ -126,6 +156,27 @@ void SYS_Init(void)
     /* Enable CAN0 clock */
     CLK_EnableModuleClock(CAN0_MODULE);
 
+	/* Enable PWM0 module clock */
+    CLK_EnableModuleClock(PWM0_MODULE);
+
+    /* Reset PWM0 module */
+    SYS_ResetModule(PWM0_RST);
+
+    /* Enable ADC module clock */
+    CLK_EnableModuleClock(ADC_MODULE);
+
+    /* ADC clock source is PCLK1, set divider to 1 */
+    CLK_SetModuleClock(ADC_MODULE, CLK_CLKSEL2_ADCSEL_PCLK1, CLK_CLKDIV0_ADC(1));
+
+    /* Enable Timer 0 module clock */
+    CLK_EnableModuleClock(TMR0_MODULE);
+
+    /* Select Timer 0 module clock source as HIRC */
+    CLK_SetModuleClock(TMR0_MODULE, CLK_CLKSEL1_TMR0SEL_HIRC, 0);
+
+    /* Enable Hardware Divider Clock */
+    CLK_EnableModuleClock(HDIV_MODULE);
+
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
@@ -134,7 +185,23 @@ void SYS_Init(void)
                     (SYS_GPB_MFP1_PB4MFP_UART0_TXD | SYS_GPB_MFP1_PB6MFP_UART0_RXD);
 
     /* Set PA0, PA1 multi-function pins as GPIO for NeoPixel */
-    //SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk | SYS_GPA_MFP0_PA1MFP_Msk));
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk | SYS_GPA_MFP0_PA1MFP_Msk));
+
+	/* Set PC multi-function pins for PWM0 Channel 2/3 */
+    SYS->GPC_MFP0 = (SYS->GPC_MFP0 & ~(SYS_GPC_MFP0_PC0MFP_Msk | SYS_GPC_MFP0_PC1MFP_Msk)) |
+                    (SYS_GPC_MFP0_PC0MFP_PWM0_CH2 | SYS_GPC_MFP0_PC1MFP_PWM0_CH3);
+
+    /* Set PC.3, PC.4 to input mode */
+    GPIO_SetMode(PC, BIT3 | BIT4, GPIO_MODE_INPUT);
+
+    /* Configure the PC.3, PC.4 ADC analog input pins.  */
+    SYS->GPC_MFP0 = (SYS->GPC_MFP0 & ~(SYS_GPC_MFP0_PC3MFP_Msk)) |
+                    (SYS_GPC_MFP0_PC3MFP_ADC0_CH12);
+    SYS->GPC_MFP1 = (SYS->GPC_MFP1 & ~(SYS_GPC_MFP1_PC4MFP_Msk)) |
+                    (SYS_GPC_MFP1_PC4MFP_ADC0_CH13);
+
+    /* Disable the PC.3, PC.4 digital input path to avoid the leakage current. */
+    GPIO_DISABLE_DIGITAL_PATH(PC, BIT3 | BIT4);
 
     /* Set PA multi-function pins for CAN0 TXD(PA.5) and RXD(PA.4) */
     SYS->GPA_MFP1 = (SYS->GPA_MFP1 & ~(SYS_GPA_MFP1_PA4MFP_Msk | SYS_GPA_MFP1_PA5MFP_Msk)) |
@@ -153,6 +220,82 @@ void CAN_Init()
     CAN_EnableInt(CAN, CAN_CON_IE_Msk);
     NVIC_SetPriority(CAN0_IRQn, (1<<__NVIC_PRIO_BITS) - 2);
     NVIC_EnableIRQ(CAN0_IRQn);
+}
+
+void PWM0_Init()
+{
+    /* Set Pwm mode as complementary mode */
+    PWM_ENABLE_COMPLEMENTARY_MODE(PWM0);
+
+    /* PWM0 channel 2 frequency is 480000 Hz, duty 0%, */
+    //PWM_ConfigOutputChannel(PWM0, 2, 480000, 0);
+
+    /* Set PWM0 timer clock prescaler */
+    PWM_SET_PRESCALER(PWM0, 2, 0);
+
+    /* Set up counter type */
+    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE2_Msk)) | (PWM_DOWN_COUNTER << PWM_CTL1_CNTTYPE2_Pos);
+
+    /* Set PWM0 timer duty */
+    PWM_SET_CMR(PWM0, 2, 24);
+
+    /* Set PWM0 timer period */
+    PWM_SET_CNR(PWM0, 2, 2400); // PFM
+    //PWM_SET_CNR(PWM0, 2, 200); // PWM
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Set PWM0 dead-time */
+    PWM_EnableDeadZone(PWM0, 2, 4);
+
+    /* Lock protected registers */
+    SYS_LockReg();
+
+    /* PWM period point trigger ADC enable */
+    //PWM_EnableADCTrigger(PWM0, 2, PWM_TRIGGER_ADC_EVEN_PERIOD_POINT);
+
+    /* Set output level at zero, compare up, period(center) and compare down of specified channel */
+    PWM_SET_OUTPUT_LEVEL(PWM0, BIT2, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING, PWM_OUTPUT_LOW, PWM_OUTPUT_HIGH);
+
+    /* Enable output of PWM0 channel 2 and 3 */
+    PWM_EnableOutput(PWM0, 0xc);
+}
+
+void ADC_Init()
+{
+    /* Enable ADC converter */
+    ADC_POWER_ON(ADC);
+    
+    /* Set input mode as single-end, Single mode, and select channel 12 and 13 */
+    ADC_Open(ADC, ADC_ADCR_DIFFEN_SINGLE_END, ADC_ADCR_ADMD_SINGLE_CYCLE, BIT12);
+
+    /* Configure the sample module and enable TIMER trigger source */
+    ADC_EnableHWTrigger(ADC, ADC_ADCR_TRGS_TIMER, 0);
+
+    /* Clear the A/D interrupt flag for safe */
+    ADC_CLR_INT_FLAG(ADC, ADC_ADF_INT);
+
+    /* Enable the sample module interrupt */
+    ADC_ENABLE_INT(ADC, ADC_ADF_INT);  /* Enable sample module A/D interrupt. */
+    NVIC_EnableIRQ(ADC_IRQn);
+}
+
+void TIMER0_Init()
+{
+    /* Set timer0 periodic time-out frequency is 200KHz */
+    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 20000);
+
+    /* Enable timer interrupt trigger ADC */
+    TIMER_SetTriggerSource(TIMER0, TIMER_TRGSRC_TIMEOUT_EVENT);
+    TIMER_SetTriggerTarget(TIMER0, TIMER_TRG_TO_ADC);
+}
+
+void PID_Init()
+{
+    PID_SetPoint(&PFM_PID, 1365);
+
+    PID_SetGain(&PFM_PID, -308, 0, 0);
 }
 
 void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
@@ -181,10 +324,28 @@ int main()
     CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, 0x201);
 
     /* Initialize NeoPixel */
-    NeoPixel_begin(&pixels, 1, &LED_PIN, NEO_GRB);
+    NeoPixel_begin(&pixels, 144, &LED_PIN, NEO_GRB);
 
     /* Turn OFF all pixels ASAP */
     NeoPixel_show(&pixels);
+
+    /* Initial PWM0 */
+    PWM0_Init();
+
+    /* Initial PID controller */
+    PID_Init();
+
+    /* Init TIMER0 for ADC */
+    TIMER0_Init();
+
+    /* Initial ADC */
+    ADC_Init();
+
+    /* Enable Timer0 counter */
+    TIMER_Start(TIMER0);
+
+    /* Enable PWM0 channel 2 counter */
+    PWM_Start(PWM0, 0x4); // CNTEN2
 
     /* Got no where to go, just loop forever */
     while(1)
