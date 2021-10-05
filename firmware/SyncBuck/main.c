@@ -150,8 +150,8 @@ void ADC_Init()
 
 void TIMER0_Init()
 {
-    /* Set timer0 periodic time-out frequency is 200KHz */
-    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 200000);
+    /* Set timer0 periodic time-out frequency is 20KHz */
+    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 20000);
 
     /* Enable timer interrupt trigger ADC */
     TIMER_SetTriggerSource(TIMER0, TIMER_TRGSRC_TIMEOUT_EVENT);
