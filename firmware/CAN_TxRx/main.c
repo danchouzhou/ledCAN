@@ -1,10 +1,20 @@
 #include <stdio.h>
 #include "NuMicro.h"
 
+#define DATA_FLASH_BASE     0x7E00
+#define MODE_ID_OFFSET      0
+/* CONFIG0: Enable data flash. */
+/* This value need to be change into 0xFDFFF97E in final product to disable reset pin and extern POR to 26.6ms */
+#define CONFIG0             0xFFFFFB7E
+/* CONFIG1: Set Data Flash Base Address to 0x7E00 (size 512 bytes) */
+#define CONFIG1             DATA_FLASH_BASE
+
 STR_CANMSG_T rrMsg;
 STR_CANMSG_T modeMsg;
 
 void CAN_ShowMsg(STR_CANMSG_T* Msg);
+
+volatile uint32_t g_u32SyncFlag = 0;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                                       */
@@ -16,6 +26,7 @@ void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
         printf("Msg-0 INT and Callback\n");
         CAN_Receive(tCAN, 0,&rrMsg);
         CAN_ShowMsg(&rrMsg);
+        g_u32SyncFlag = 1;
     }
     if(u32IIDR==2)
     {
@@ -92,9 +103,6 @@ void SYS_Init(void)
     /* Init System Clock                                                                                       */
     /*---------------------------------------------------------------------------------------------------------*/
 
-    /* Unlock protected registers */
-    SYS_UnlockReg();
-
     /* Enable HIRC clock (Internal RC 48MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -127,18 +135,15 @@ void SYS_Init(void)
     /* Set PA multi-function pins for CAN0 TXD(PA.5) and RXD(PA.4) */
     SYS->GPA_MFP1 = (SYS->GPA_MFP1 & ~(SYS_GPA_MFP1_PA4MFP_Msk | SYS_GPA_MFP1_PA5MFP_Msk)) |
                     (SYS_GPA_MFP1_PA4MFP_CAN0_RXD | SYS_GPA_MFP1_PA5MFP_CAN0_TXD);
-
-    /* Lock protected registers */
-    SYS_LockReg();
 }
 
-void CAN_Init(CAN_T *tCAN)
+void CAN_Init()
 {
-    if(CAN_Open(tCAN,  500000, CAN_NORMAL_MODE) < 0)
+    if(CAN_Open(CAN,  500000, CAN_NORMAL_MODE) < 0)
         printf("Set CAN bit rate is fail\n");
 
     /* Enable CAN interrupt */
-    CAN_EnableInt(tCAN, CAN_CON_IE_Msk);
+    CAN_EnableInt(CAN, CAN_CON_IE_Msk);
     NVIC_SetPriority(CAN0_IRQn, (1<<__NVIC_PRIO_BITS) - 2);
     NVIC_EnableIRQ(CAN0_IRQn);
 }
@@ -152,8 +157,77 @@ void CAN_ShowMsg(STR_CANMSG_T* Msg)
     printf("\n\n");
 }
 
+int check_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
+{
+    uint32_t au32Config[2];
+
+    /* Read User Configuration 0 & 1 */
+    if (FMC_ReadConfig(au32Config, 2) < 0)
+    {
+        printf("\nRead User Config failed!\n");
+        return -1;
+    }
+
+    /* Check if Data Flash is enabled (CONFIG0[0]) and is expected address (CONFIG1) */
+    if (((au32Config[0] == u32Cfg0)) && (au32Config[1] == u32Cfg1))
+        return 0;
+
+    return -1;
+}
+
+int set_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
+{
+    uint32_t au32Config[2];
+
+    FMC_ENABLE_CFG_UPDATE();
+
+    /* Erase User Configuration */
+    FMC_Erase(FMC_CONFIG_BASE);
+
+    au32Config[0] = u32Cfg0;         /* CONFIG0[0] = 0 (Enabled) / 1 (Disabled) */
+    au32Config[1] = u32Cfg1;
+
+    /* Update User Configuration settings. */
+    if (FMC_WriteConfig(au32Config, 2) < 0)
+        return -1;
+    
+    printf("\nSet Data Flash base as 0x%x.\n", DATA_FLASH_BASE);
+
+    /* To check if all the debug messages are finished */
+    //while(!IsDebugFifoEmpty());
+
+    /* Perform chip reset to make new User Config take effect */
+    SYS->IPRST0 = SYS_IPRST0_CHIPRST_Msk;
+
+    return 0;
+}
+
+void FMC_Init()
+{
+    /* Enable FMC ISP function */
+    FMC_Open();
+
+    /* Enable Data Flash and set base address. */
+    if (check_config_bits(CONFIG0, CONFIG1) < 0)
+    {
+        if(set_config_bits(CONFIG0, CONFIG1))
+        {
+            printf("Failed to set Data Flash base address!\n");
+            return;
+        }
+    }
+
+    printf("Config bits check passed.\r\n");
+}
+
 int main()
 {
+    uint32_t u32ModeID = 0;
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Initialize system setup */
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -162,14 +236,61 @@ int main()
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("Hello World\n");
 
-    /* Initial CAN module */
-    CAN_Init(CAN);
+    /* Initial flash configuration */
+    FMC_Init();
 
-    /* Set message object 0 arbitration = 0x200 (512) */
+    /* Read mode ID in data flash */
+    u32ModeID = FMC_Read(DATA_FLASH_BASE + MODE_ID_OFFSET);
+    printf("Mode ID is: 0x%x\r\n", u32ModeID);
+
+    /* Disable FMC ISP function */
+    FMC_Close();
+
+    /* Lock protected registers */
+    SYS_LockReg();
+
+    /* Initial CAN module */
+    CAN_Init();
+
+    /* Set message object 0 for synchronous, arbitration = 0x200 (512) */
     CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, 0x200);
 
-    /* Set message object 0 arbitration = 0x201 (513) */
-    CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, 0x201);
+    /* Set message object 1 for mode. Arbitration read from flash */
+    CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, u32ModeID);
 
-    while(1) ;
+    while(1)
+    {
+        if (g_u32SyncFlag == 1)
+        {
+            /* Clear synchronous flag */
+            g_u32SyncFlag = 0;
+
+            switch (modeMsg.Data[0]) {
+                case 0: // idel
+                    printf("Perform mode 0: idel\r\n");
+                    break;
+                case 1: // fill, numberOfLEDs, r, g, b
+                    printf("Perform mode 1: fill\r\n");
+                    break;
+                case 2: // wipe, numberOfLEDs, r, g, b, interval (ms)
+                    printf("Perform mode 2: wipe\r\n");
+                    break;
+                case 3: // blink, numberOfLEDs, r, g, b, delay (second*10)
+                    printf("Perform mode 3: blink\r\n");
+                    break;
+                case 4: // breath, numberOfLEDs, r, g, b, period (second)
+                    printf("Perform mode 4: breath\r\n");
+                    break;
+                case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
+                    printf("Perform mode 5: snake scroll\r\n");
+                    break;
+                case 6: // Send PA0 ADC value every 10ms
+                    printf("Perform mode 6: read A/D value\r\n");
+                    break;
+                
+                default: 
+                    break;
+            }
+        }
+    }
 }
