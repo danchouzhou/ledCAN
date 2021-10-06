@@ -4,7 +4,16 @@
 #include "delay.h"
 #include "pid.h"
 
+/* Hardware configuration */
 #define LED_PIN     PA0
+
+#define DATA_FLASH_BASE     0x7E00
+#define MODE_ID_OFFSET      0
+/* CONFIG0: Enable data flash. */
+/* This value need to be change into 0xFDFFF97E in final product to disable reset pin and extern POR to 26.6ms */
+#define CONFIG0             0xFFFFFB7E
+/* CONFIG1: Set Data Flash Base Address to 0x7E00 (size 512 bytes) */
+#define CONFIG1             DATA_FLASH_BASE
 
 /* Create a NeoPixel object */
 STR_NEOPIXEL_T pixels;
@@ -18,6 +27,7 @@ STR_CANMSG_T modeMsg;
 STR_PID_T PFM_PID = {0};
 
 volatile uint32_t g_u32SyncFlag = 0;
+volatile int32_t g_i32AdCh0Data = 0;
 
 void ADC_IRQHandler(void)
 {
@@ -28,6 +38,8 @@ void ADC_IRQHandler(void)
     if(ADC_IS_DATA_VALID(ADC, 12))
         i32ConversionData = ADC_GET_CONVERSION_DATA(ADC, 12);
 
+    if(ADC_IS_DATA_VALID(ADC, 1))
+        g_i32AdCh0Data = ADC_GET_CONVERSION_DATA(ADC, 1);
 
     i32Comp = HDIV_Div(PID_GetCompValue(&PFM_PID, i32ConversionData), 10000);
 
@@ -59,16 +71,16 @@ void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
     if(u32IIDR==1)
     {
-        printf("Msg-0 INT and Callback\n");
+        //printf("Msg-0 INT and Callback\n");
         CAN_Receive(tCAN, 0,&rrMsg);
-        CAN_ShowMsg(&rrMsg);
+        //CAN_ShowMsg(&rrMsg);
         g_u32SyncFlag = 1;
     }
     if(u32IIDR==2)
     {
-        printf("Msg-1 INT and Callback\n");
+        //printf("Msg-1 INT and Callback\n");
         CAN_Receive(tCAN, 1,&modeMsg);
-        CAN_ShowMsg(&modeMsg);
+        //CAN_ShowMsg(&modeMsg);
     }
 }
 
@@ -206,9 +218,6 @@ void SYS_Init(void)
     /* Set PA multi-function pins for CAN0 TXD(PA.5) and RXD(PA.4) */
     SYS->GPA_MFP1 = (SYS->GPA_MFP1 & ~(SYS_GPA_MFP1_PA4MFP_Msk | SYS_GPA_MFP1_PA5MFP_Msk)) |
                     (SYS_GPA_MFP1_PA4MFP_CAN0_RXD | SYS_GPA_MFP1_PA5MFP_CAN0_TXD);
-
-    /* Lock protected registers */
-    SYS_LockReg();
 }
 
 void CAN_Init()
@@ -291,6 +300,69 @@ void PID_Init()
     PID_SetGain(&PFM_PID, -308, 0, 0);
 }
 
+int check_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
+{
+    uint32_t au32Config[2];
+
+    /* Read User Configuration 0 & 1 */
+    if (FMC_ReadConfig(au32Config, 2) < 0)
+    {
+        printf("\nRead User Config failed!\n");
+        return -1;
+    }
+
+    /* Check if Data Flash is enabled (CONFIG0[0]) and is expected address (CONFIG1) */
+    if (((au32Config[0] == u32Cfg0)) && (au32Config[1] == u32Cfg1))
+        return 0;
+
+    return -1;
+}
+
+int set_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
+{
+    uint32_t au32Config[2];
+
+    FMC_ENABLE_CFG_UPDATE();
+
+    /* Erase User Configuration */
+    FMC_Erase(FMC_CONFIG_BASE);
+
+    au32Config[0] = u32Cfg0;         /* CONFIG0[0] = 0 (Enabled) / 1 (Disabled) */
+    au32Config[1] = u32Cfg1;
+
+    /* Update User Configuration settings. */
+    if (FMC_WriteConfig(au32Config, 2) < 0)
+        return -1;
+    
+    printf("\nSet Data Flash base as 0x%x.\n", DATA_FLASH_BASE);
+
+    /* To check if all the debug messages are finished */
+    //while(!IsDebugFifoEmpty());
+
+    /* Perform chip reset to make new User Config take effect */
+    SYS->IPRST0 = SYS_IPRST0_CHIPRST_Msk;
+
+    return 0;
+}
+
+void FMC_Init()
+{
+    /* Enable FMC ISP function */
+    FMC_Open();
+
+    /* Enable Data Flash and set base address. */
+    if (check_config_bits(CONFIG0, CONFIG1) < 0)
+    {
+        if(set_config_bits(CONFIG0, CONFIG1))
+        {
+            printf("Failed to set Data Flash base address!\n");
+            return;
+        }
+    }
+
+    printf("Config bits check passed.\r\n");
+}
+
 void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 {
     if(NeoPixel_numPixels(&pixels) != u16NewLen)
@@ -299,6 +371,12 @@ void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 
 int main()
 {
+    uint32_t u32ModeID = 0;
+
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Initial system setup */
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -307,17 +385,30 @@ int main()
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("Hello World\r\n");
 
+    /* Initial flash configuration */
+    FMC_Init();
+
+    /* Read mode ID in data flash */
+    u32ModeID = FMC_Read(DATA_FLASH_BASE + MODE_ID_OFFSET);
+    printf("Mode ID is: 0x%x\r\n", u32ModeID);
+
+    /* Disable FMC ISP function */
+    FMC_Close();
+
+    /* Lock protected registers */
+    SYS_LockReg();
+
     /* Initial CAN module */
     CAN_Init();
 
-    /* Set message object 0 arbitration = 0x200 (512) */
+    /* Set message object 0 for synchronous arbitration = 0x200 (512) */
     CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, 0x200);
 
-    /* Set message object 0 arbitration = 0x201 (513) */
-    CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, 0x201);
+    /* Set message object 1 arbitration = 0x201 (513) */
+    CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, u32ModeID);
 
     /* Initialize NeoPixel */
-    NeoPixel_begin(&pixels, 144, &LED_PIN, NEO_GRB);
+    NeoPixel_begin(&pixels, 0, &LED_PIN, NEO_GRB);
 
     /* Turn OFF all pixels ASAP */
     NeoPixel_show(&pixels);
@@ -345,10 +436,9 @@ int main()
     {
         if (g_u32SyncFlag == 1)
         {
+            /* Clear synchronous flag */
             g_u32SyncFlag = 0;
 
-            printf("%d\n", modeMsg.Data[0]);
-            
             switch (modeMsg.Data[0]) {
                 case 0: // idel
                     updateLen(&pixels, modeMsg.Data[1]);
@@ -430,7 +520,24 @@ int main()
                         delay(modeMsg.Data[6]);
                     }
                     break;
-                case 6: // Send PA0 ADC value every 10ms
+                case 6: // Get PA1 ADC value every 10ms
+                    /* Set PA.1 to input mode */
+                    GPIO_SetMode(PA, BIT1, GPIO_MODE_INPUT);
+
+                    /* Configure the PA.1 ADC analog input pins.  */
+                    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA1MFP_Msk)) |
+                                    (SYS_GPA_MFP0_PA1MFP_ADC0_CH1);
+
+                    /* Disable the PC.3, PC.4 digital input path to avoid the leakage current. */
+                    GPIO_DISABLE_DIGITAL_PATH(PA, BIT1);
+
+                    ADC_SET_INPUT_CHANNEL(ADC, BIT1);
+
+                    while(modeMsg.Data[0]==6)
+                    {
+                        printf("ADC_CH1: %d\r\n", g_i32AdCh0Data);
+                        delay(10);
+                    }
                     break;
                 
                 default: 
