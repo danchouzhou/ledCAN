@@ -39,7 +39,8 @@ numicro write_isp 0x00300000 0xFDFFF97E
 # Config 1: 0x00007E00, DFBA=0x07E00 (data flash base address)
 numicro write_isp 0x00300004 0x00007E00
 ```
-5. To program the data flash
+6. To program the data flash
 ```
+# numicro write_isp DFBA CAN_ID
 numicro write_isp 0x00007E00 0x201
 ```
