@@ -9,9 +9,9 @@
 ``ledCAN`` The full function firmware for final product. <br>
 
 ## Usage
-1. Build
-Output binary file will be in the ``Objects`` folder after build. 
+1. Build a project. 
 ```
+# The output binary file will be in the Objects folder
 cd to project directory
 make clean && make
 ```
