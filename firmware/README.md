@@ -15,23 +15,31 @@ Output binary file will be in the ``Objects`` folder after build.
 cd to project directory
 make clean && make
 ```
-2. Erase whole chip and verify each block
+2. Run OpenOCD-Nuvoton and connect via telenet
+```
+sudo openocd -f /usr/local/share/openocd/scripts/interface/nulink.cfg -f /usr/local/share/openocd/scripts/target/numicroM0.cfg
+telnet localhost 4444
+```
+2. Erase the whole chip
 ```
 numicro chip_erase
-flash erase_check NuMicro.flash_config
-flash erase_check NuMicro.flash_ldrom
-flash erase_check NuMicro.flash_aprom
 ```
-3. To flash the config bits (not complet yet)
+3. To program the LDROM
 ```
-# Create configure binary file
-echo -n -e "\x7F\xFB\xFF\xFD\xFF\xFF\xFF\xFF\x5A\xFF\xFF\xFF" >> config.bin
+flash write_image erase ISP_CAN.bin 0x00100000
 ```
-4. To flash the LDROM
+4. To program the APROM
 ```
-openocd -f ../scripts/interface/nulink.cfg -f ../scripts/target/numicroM0.cfg -c "init;reset init;flash erase_address 0x00100000 0x800;flash erase_check NuMicro.flash_ldrom;flash write_bank NuMicro.flash_ldrom ISP_CAN.bin 0;flash verify_bank NuMicro.flash_ldrom ISP_CAN.bin 0;exit;"
+flash write_image erase ledCAN.bin 0x00000000
 ```
-5. To flash the APROM
+5. To program the config bits
 ```
-openocd -f ../scripts/interface/nulink.cfg -f ../scripts/target/numicroM0.cfg -c "init;reset init;flash erase_address 0x00000000 0x8000;flash erase_check NuMicro.flash_aprom;flash write_bank NuMicro.flash_aprom HelloWorld.bin 0;flash verify_bank NuMicro.flash_aprom HelloWorld.bin 0;exit;"
+# Config 0: 0xFDFFF97E, I/O pull-up, extern POR time, disable reset pin, boot from LDROM, enable data flash
+numicro write_isp 0x00300000 0xFDFFF97E
+# Config 1: 0x00007E00, DFBA=0x07E00 (data flash base address)
+numicro write_isp 0x00300004 0x00007E00
+```
+5. To program the data flash
+```
+numicro write_isp 0x00007E00 0x201
 ```
