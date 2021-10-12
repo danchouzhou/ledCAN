@@ -495,7 +495,7 @@ int main()
                     NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     for(int i=0; i<NeoPixel_numPixels(&pixels); i++)
                     {
-                        if(i<modeMsg.Data[5])
+                        if(i<modeMsg.Data[6])
                         {
                             NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
                         }
@@ -505,9 +505,9 @@ int main()
                             NeoPixel_setPixelColor(&pixels, i-modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
                         }
                         NeoPixel_show(&pixels);
-                        delay(modeMsg.Data[6]);
+                        delay(modeMsg.Data[5]);
                     }
-                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[5]; i>=-(int)modeMsg.Data[5]; i--)
+                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[6]; i>=-(int)modeMsg.Data[6]; i--)
                     {
                         if(i<0)
                         {
@@ -519,7 +519,7 @@ int main()
                             NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
                         }
                         NeoPixel_show(&pixels);
-                        delay(modeMsg.Data[6]);
+                        delay(modeMsg.Data[5]);
                     }
                     break;
                 case 6: // Get PA1 ADC value every 10ms
