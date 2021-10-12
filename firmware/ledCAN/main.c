@@ -5,7 +5,8 @@
 #include "pid.h"
 
 /* Hardware configuration */
-#define LED_PIN     PA0
+#define LED_PIN             PA0
+#define MAX_BRIGHTNESS      0x80 // 我們店裡的正常是半糖喔
 
 #define DATA_FLASH_BASE     0x7E00
 #define MODE_ID_OFFSET      0
@@ -415,6 +416,9 @@ int main()
     /* Turn OFF all pixels ASAP */
     NeoPixel_show(&pixels);
 
+    /* Set the maxmium brightness for NeoPixels */
+    NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
+
     /* Initial PWM0 */
     PWM0_Init();
 
@@ -466,24 +470,24 @@ int main()
                     break;
                 case 4: // breath, numberOfLEDs, r, g, b, period (second)
                     updateLen(&pixels, modeMsg.Data[1]);
-                    for(int i=0; i<256; i+=((modeMsg.Data[5]>3)?1:5)) // Increase 5 if period <= 3 seconds
+                    for(int i=0; i<MAX_BRIGHTNESS; i+=((modeMsg.Data[5]>3)?1:5)) // Increase 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
                         NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
-                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
+                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
                     }
-                    for(int i=255; i>=0; i-=((modeMsg.Data[5]>3)?1:5)) // Decrease 5 if period <= 3 seconds
+                    for(int i=MAX_BRIGHTNESS; i>=0; i-=((modeMsg.Data[5]>3)?1:5)) // Decrease 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
                         NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
-                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?1953:9765)); // 1000000/256/2
+                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
                     }
                     NeoPixel_clear(&pixels);
-                    NeoPixel_setBrightness(&pixels, 255);
+                    NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
                     break;
                 case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
                     if(modeMsg.Data[1] != NeoPixel_numPixels(&pixels))
