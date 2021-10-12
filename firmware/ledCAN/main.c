@@ -10,8 +10,7 @@
 #define DATA_FLASH_BASE     0x7E00
 #define MODE_ID_OFFSET      0
 /* CONFIG0: Enable data flash. */
-/* This value need to be change into 0xFDFFF97E in final product to disable reset pin and extern POR to 26.6ms */
-#define CONFIG0             0xFFFFFB7E
+#define CONFIG0             0xFDFFF97E
 /* CONFIG1: Set Data Flash Base Address to 0x7E00 (size 512 bytes) */
 #define CONFIG1             DATA_FLASH_BASE
 
@@ -27,7 +26,7 @@ STR_CANMSG_T modeMsg;
 STR_PID_T PFM_PID = {0};
 
 volatile uint32_t g_u32SyncFlag = 0;
-volatile int32_t g_i32AdCh0Data = 0;
+volatile uint32_t g_u32AdCh0Data = 0;
 
 void ADC_IRQHandler(void)
 {
@@ -39,7 +38,7 @@ void ADC_IRQHandler(void)
         i32ConversionData = ADC_GET_CONVERSION_DATA(ADC, 12);
 
     if(ADC_IS_DATA_VALID(ADC, 1))
-        g_i32AdCh0Data = ADC_GET_CONVERSION_DATA(ADC, 1);
+        g_u32AdCh0Data = ADC_GET_CONVERSION_DATA(ADC, 1);
 
     i32Comp = HDIV_Div(PID_GetCompValue(&PFM_PID, i32ConversionData), 10000);
 
@@ -371,6 +370,9 @@ void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 
 int main()
 {
+    /* Create a volatile pointer to modeMsg keep the value up to date */
+    volatile STR_CANMSG_T *pModeMsg = &modeMsg;
+
     uint32_t u32ModeID = 0;
 
     /* Unlock protected registers */
@@ -439,7 +441,7 @@ int main()
             /* Clear synchronous flag */
             g_u32SyncFlag = 0;
 
-            switch (modeMsg.Data[0]) {
+            switch (pModeMsg->Data[0]) {
                 case 0: // idel
                     updateLen(&pixels, modeMsg.Data[1]);
                     NeoPixel_clear(&pixels);
@@ -531,13 +533,29 @@ int main()
                     /* Disable the PC.3, PC.4 digital input path to avoid the leakage current. */
                     GPIO_DISABLE_DIGITAL_PATH(PA, BIT1);
 
+                    /* Add input channel */
                     ADC_SET_INPUT_CHANNEL(ADC, BIT1);
 
-                    while(modeMsg.Data[0]==6)
+                    modeMsg.FrameType = CAN_DATA_FRAME;
+                    modeMsg.IdType = CAN_STD_ID;
+                    modeMsg.Id = u32ModeID;
+                    modeMsg.DLC = 3;
+                    
+                    while(pModeMsg->Data[0] == 6) // leave if mode has been change
                     {
-                        printf("ADC_CH1: %d\r\n", g_i32AdCh0Data);
+                        //modeMsg.Data[0] = 6;
+                        modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF);
+                        modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F);
+                        CAN_Transmit(CAN, MSG(1), &modeMsg);
                         delay(10);
                     }
+
+                    /* Set the I/O mode to default */
+                    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA1MFP_Msk));
+                    GPIO_SetMode(PA, BIT1, GPIO_MODE_INPUT);
+                    GPIO_ENABLE_DIGITAL_PATH(PA, BIT1);
+                    ADC->ADCHER = (ADC->ADCHER & ~ADC_ADCHER_CHEN_Msk) | ~(BIT1);
+
                     break;
                 
                 default: 
