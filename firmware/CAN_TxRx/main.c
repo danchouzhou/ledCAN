@@ -1,5 +1,6 @@
 #include <stdio.h>
 #include "NuMicro.h"
+#include "delay.h"
 
 #define DATA_FLASH_BASE     0x7E00
 #define MODE_ID_OFFSET      0
@@ -15,6 +16,7 @@ STR_CANMSG_T modeMsg;
 void CAN_ShowMsg(STR_CANMSG_T* Msg);
 
 volatile uint32_t g_u32SyncFlag = 0;
+volatile uint32_t g_u32AdCh0Data = 0;
 
 /*---------------------------------------------------------------------------------------------------------*/
 /* ISR to handle CAN interrupt event                                                                       */
@@ -222,6 +224,9 @@ void FMC_Init()
 
 int main()
 {
+    /* Create a volatile pointer to modeMsg keep the value up to date */
+    volatile STR_CANMSG_T *pModeMsg = &modeMsg;
+
     uint32_t u32ModeID = 0;
 
     /* Unlock protected registers */
@@ -265,7 +270,9 @@ int main()
             /* Clear synchronous flag */
             g_u32SyncFlag = 0;
 
-            switch (modeMsg.Data[0]) {
+            printf("Mode: %d\r\n", pModeMsg->Data[0]);
+
+            switch (pModeMsg->Data[0]) {
                 case 0: // idel
                     printf("Perform mode 0: idel\r\n");
                     break;
@@ -284,8 +291,22 @@ int main()
                 case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
                     printf("Perform mode 5: snake scroll\r\n");
                     break;
-                case 6: // Send PA0 ADC value every 10ms
+                case 6: // Send PA0 ADC value every 500ms
                     printf("Perform mode 6: read A/D value\r\n");
+                    g_u32AdCh0Data = 1234; // transmit test value
+                    modeMsg.FrameType = CAN_DATA_FRAME;
+                    modeMsg.IdType = CAN_STD_ID;
+                    modeMsg.Id = u32ModeID;
+                    modeMsg.DLC = 3;
+                    
+                    while(pModeMsg->Data[0] == 6) // leave if mode has been change
+                    {
+                        //modeMsg.Data[0] = 6;
+                        modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF);
+                        modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F);
+                        CAN_Transmit(CAN, MSG(1), &modeMsg);
+                        delay(500);
+                    }
                     break;
                 
                 default: 
