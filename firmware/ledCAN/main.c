@@ -99,14 +99,14 @@ void CAN0_IRQHandler(void)
         {
             CAN->STATUS &= ~CAN_STATUS_RXOK_Msk;   /* Clear Rx Ok status*/
 
-            printf("RX OK INT\n") ;
+            //printf("RX OK INT\n") ;
         }
 
         if(CAN->STATUS & CAN_STATUS_TXOK_Msk)
         {
             CAN->STATUS &= ~CAN_STATUS_TXOK_Msk;    /* Clear Tx Ok status*/
 
-            printf("TX OK INT\n") ;
+            //printf("TX OK INT\n") ;
         }
 
         /**************************/
@@ -114,7 +114,7 @@ void CAN0_IRQHandler(void)
         /**************************/
         if(CAN->STATUS & CAN_STATUS_EWARN_Msk)
         {
-            printf("EWARN INT\n") ;
+            //printf("EWARN INT\n") ;
 
             /* Do Init to release busoff pin */
             CAN->CON = (CAN_CON_INIT_Msk | CAN_CON_CCE_Msk);
@@ -124,12 +124,12 @@ void CAN0_IRQHandler(void)
 
         if(CAN->STATUS & CAN_STATUS_BOFF_Msk)
         {
-            printf("BOFF INT\n") ;
+            //printf("BOFF INT\n") ;
         }
     }
     else if (u8IIDRstatus!=0)
     {
-        printf("=> Interrupt Pointer = %d\n",CAN->IIDR -1);
+        //printf("=> Interrupt Pointer = %d\n",CAN->IIDR -1);
 
         CAN_MsgInterrupt(CAN, u8IIDRstatus);
 
@@ -138,7 +138,7 @@ void CAN0_IRQHandler(void)
     }
     else if(CAN->WU_STATUS == 1)
     {
-        printf("Wake up\n");
+        //printf("Wake up\n");
 
         CAN->WU_STATUS = 0;                       /* Write '0' to clear */
     }
@@ -551,7 +551,7 @@ int main()
                         //modeMsg.Data[0] = 6;
                         modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF);
                         modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F);
-                        CAN_Transmit(CAN, MSG(1), &modeMsg);
+                        CAN_Transmit(CAN, MSG(2), &modeMsg); // Use msg 2 transmit
                         delay(10);
                     }
 
