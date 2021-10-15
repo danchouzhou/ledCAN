@@ -455,6 +455,7 @@ int main()
                     updateLen(&pixels, modeMsg.Data[1]);
                     NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     NeoPixel_show(&pixels);
+                    NeoPixel_clear(&pixels);
                     break;
                 case 2: // wipe, numberOfLEDs, r, g, b, interval (ms)
                     updateLen(&pixels, modeMsg.Data[1]);
@@ -538,7 +539,7 @@ int main()
                     GPIO_DISABLE_DIGITAL_PATH(PA, BIT1);
 
                     /* Add input channel */
-                    ADC_SET_INPUT_CHANNEL(ADC, BIT1);
+                    ADC->ADCHER = ADC->ADCHER | BIT1;
 
                     modeMsg.FrameType = CAN_DATA_FRAME;
                     modeMsg.IdType = CAN_STD_ID;
@@ -555,10 +556,10 @@ int main()
                     }
 
                     /* Set the I/O mode to default */
+                    ADC->ADCHER = ADC->ADCHER & (~BIT1);
                     SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA1MFP_Msk));
                     GPIO_SetMode(PA, BIT1, GPIO_MODE_INPUT);
                     GPIO_ENABLE_DIGITAL_PATH(PA, BIT1);
-                    ADC->ADCHER = (ADC->ADCHER & ~ADC_ADCHER_CHEN_Msk) | ~(BIT1);
 
                     break;
                 
