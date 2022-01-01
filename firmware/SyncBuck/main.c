@@ -162,7 +162,7 @@ void PID_Init()
 {
     PID_SetPoint(&PFM_PID, 1365);
 
-    PID_SetGain(&PFM_PID, -308, 0, 0);
+    PID_SetGain(&PFM_PID, -90, -1, 0);
 
     PID_SetPoint(&PWM_PID, 1365);
 

@@ -297,7 +297,7 @@ void PID_Init()
 {
     PID_SetPoint(&PFM_PID, 1365);
 
-    PID_SetGain(&PFM_PID, -308, 0, 0);
+    PID_SetGain(&PFM_PID, -90, 0, 0);
 }
 
 int check_config_bits(uint32_t u32Cfg0, uint32_t u32Cfg1)
