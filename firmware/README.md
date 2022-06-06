@@ -7,6 +7,7 @@
 ``CAN_TxRx`` This is a CAN test code for mode and color select. <br>
 ``FlashConfig`` This is a code for config bits setup and accessing data flash. <br>
 ``ledCAN`` The full function firmware for final product. <br>
+``id`` Generate CAN ID bianry file from shell script. <br>
 
 ## Usage
 1. Build a project. 
