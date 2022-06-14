@@ -558,7 +558,7 @@ int main()
                     /* Set the I/O mode to default */
                     ADC->ADCHER = ADC->ADCHER & (~BIT1);
                     SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA1MFP_Msk));
-                    GPIO_SetMode(PA, BIT1, GPIO_MODE_INPUT);
+                    GPIO_SetMode(PA, BIT1, GPIO_MODE_OUTPUT);
                     GPIO_ENABLE_DIGITAL_PATH(PA, BIT1);
 
                     break;
