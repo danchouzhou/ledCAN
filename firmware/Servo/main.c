@@ -44,10 +44,6 @@ void SYS_Init(void)
     SYS->GPB_MFP1 = (SYS->GPB_MFP1 & ~(SYS_GPB_MFP1_PB4MFP_Msk | SYS_GPB_MFP1_PB6MFP_Msk)) |        \
                     (SYS_GPB_MFP1_PB4MFP_UART0_TXD | SYS_GPB_MFP1_PB6MFP_UART0_RXD);
 
-    /* Set PA multi-function pins for PWM0 Channel 1 */
-    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
-                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
-
     /* Lock protected registers */
     SYS_LockReg();
 }
@@ -72,6 +68,10 @@ int main()
 
     printf("Press any key to start.\n");
     getchar();
+
+    /* Set PA multi-function pins for PWM0 Channel 1 */
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
+                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
 
     /* Set PWM0 timer clock prescaler */
     PWM_SET_PRESCALER(PWM0, 1, 479); // 48MHz/480=100KHz
