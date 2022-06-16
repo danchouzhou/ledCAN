@@ -31,12 +31,22 @@ void SYS_Init(void)
     /* Switch UART0 clock source to HIRC */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
 
+    /* Enable PWM0 module clock */
+    CLK_EnableModuleClock(PWM0_MODULE);
+
+    /* Reset PWM0 module */
+    SYS_ResetModule(PWM0_RST);
+
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
     /* Set PB multi-function pins for UART0 RXD=PB.6 and TXD=PB.4 */
     SYS->GPB_MFP1 = (SYS->GPB_MFP1 & ~(SYS_GPB_MFP1_PB4MFP_Msk | SYS_GPB_MFP1_PB6MFP_Msk)) |        \
                     (SYS_GPB_MFP1_PB4MFP_UART0_TXD | SYS_GPB_MFP1_PB6MFP_UART0_RXD);
+
+    /* Set PA multi-function pins for PWM0 Channel 1 */
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
+                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
 
     /* Lock protected registers */
     SYS_LockReg();
@@ -59,6 +69,32 @@ int main()
 
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("Hello World\n");
+
+    printf("Press any key to start.\n");
+    getchar();
+
+    /* Set PWM0 timer clock prescaler */
+    PWM_SET_PRESCALER(PWM0, 1, 479); // 48MHz/480=100KHz
+
+    /* Set up counter type */
+    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_DOWN_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
+
+    /* Set PWM0 timer duty */
+    // 0 degree start from (60/500)/(1/200)=0.6ms, end to 2.4ms
+    // Tested with SAVOX SB-2270SG servo motor
+    PWM_SET_CMR(PWM0, 1, 60);
+
+    /* Set PWM0 timer period */
+    PWM_SET_CNR(PWM0, 1, 500); // 100KHz/500=200Hz
+
+    /* Set output level at zero, compare up, period(center) and compare down of specified channel */
+    PWM_SET_OUTPUT_LEVEL(PWM0, BIT1, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING, PWM_OUTPUT_LOW, PWM_OUTPUT_HIGH);
+
+    /* Enable output of PWM0 channel 1 */
+    PWM_EnableOutput(PWM0, BIT1);
+
+    /* Enable PWM0 channel 1 counter */
+    PWM_Start(PWM0, BIT1); // CNTEN1
 
     /* Got no where to go, just loop forever */
     while(1);
