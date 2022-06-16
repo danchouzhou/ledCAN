@@ -2,8 +2,17 @@
 #include "NuMicro.h"
 #include "servo.h"
 
-void servo_attach(STR_SERVO_T *pServo, PWM_T *pwm, uint32_t u32pwmChannelMask, volatile uint32_t *pu32pdio)
+uint32_t servo_attached(STR_SERVO_T *pServo)
 {
+    return pServo->u32isAttached;
+}
+
+uint32_t servo_attach(STR_SERVO_T *pServo, PWM_T *pwm, uint32_t u32pwmChannelMask, volatile uint32_t *pu32pdio)
+{
+    /* Check if already configured */
+    if (pServo->u32isAttached)
+        return pServo->u32isAttached;
+    
     pServo->pwm = pwm;
     pServo->u32pwmChannelMask = u32pwmChannelMask;
     pServo->pu32pdio = pu32pdio;
@@ -36,6 +45,10 @@ void servo_attach(STR_SERVO_T *pServo, PWM_T *pwm, uint32_t u32pwmChannelMask, v
 
     /* Enable PWM0 channel 1 counter */
     PWM_Start(PWM0, BIT1); // CNTEN1
+
+    pServo->u32isAttached = 1;
+
+    return pServo->u32isAttached;
 }
 
 uint8_t servo_write(STR_SERVO_T *pServo, uint8_t u8degree)

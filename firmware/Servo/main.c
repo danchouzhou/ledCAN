@@ -61,7 +61,7 @@ void SYS_Init(void)
 int main()
 {
     /* Create a Servo object */
-    STR_SERVO_T servo;
+    STR_SERVO_T servo = {0};
 
     SYS_Init();
 
