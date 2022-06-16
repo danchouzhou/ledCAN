@@ -97,8 +97,22 @@ int main()
     /* Enable PWM0 channel 1 counter */
     PWM_Start(PWM0, BIT1); // CNTEN1
 
-    /* Got no where to go, just loop forever */
-    while(1);
+    /* Move the servo back and forth */
+    while(1)
+    {
+        for(int i=1; i<=180; i++)
+        {
+            PWM_SET_CMR(PWM0, 1, 60+i);
+            delay(100);
+        }
+        delay(2000);
+        for(int i=179; i>=0; i--)
+        {
+            PWM_SET_CMR(PWM0, 1, 60+i);
+            delay(100);
+        }
+        delay(2000);
+    }
 }
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
