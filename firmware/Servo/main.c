@@ -8,6 +8,7 @@
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
+#include "delay.h"
 
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
 
