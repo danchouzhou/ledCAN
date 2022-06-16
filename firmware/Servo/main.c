@@ -81,7 +81,7 @@ int main()
     PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_DOWN_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
 
     /* Set PWM0 timer duty */
-    // 0 degree start from (60/500)/(1/200)=0.6ms, end to 2.4ms
+    // 0 degree start from (60/500)/(1/200)=0.6ms, end to 2.4ms (180 degree)
     // Tested with SAVOX SB-2270SG servo motor
     PWM_SET_CMR(PWM0, 1, 60);
 
