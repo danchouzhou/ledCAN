@@ -3,6 +3,7 @@
 #include "NeoPixel.h"
 #include "delay.h"
 #include "pid.h"
+#include "servo.h"
 
 /* Hardware configuration */
 #define LED_PIN             PA0
@@ -19,6 +20,9 @@
 STR_NEOPIXEL_T pixels;
 
 void colorWipe(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, int wait);
+
+/* Create a Servo object */
+STR_SERVO_T servo = {0};
 
 /* Create CAN message object */
 STR_CANMSG_T rrMsg;
@@ -562,7 +566,10 @@ int main()
                     GPIO_ENABLE_DIGITAL_PATH(PA, BIT1);
 
                     break;
-                
+                case 7: // servo, degree
+                    servo_attach(&servo, PWM0, PWM_CH_1_MASK, &PA0);
+                    servo_write(&servo, modeMsg.Data[1]);
+                    break;
                 default: 
                     break;
             }
