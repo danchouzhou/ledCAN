@@ -76,6 +76,10 @@ int main()
 
     servo_attach(&servo, PWM0, PWM_CH_1_MASK, &PA0);
 
+    servo_write(&servo, 0);
+
+    while(1);
+
     /* Move the servo back and forth */
     while(1)
     {
