@@ -570,6 +570,36 @@ int main()
                     servo_attach(&servo, PWM0, PWM_CH_1_MASK, &PA0);
                     servo_write(&servo, modeMsg.Data[1]);
                     break;
+                case 8: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
+                    /* Set PA multi-function pins for PWM0 Channel 1 */
+                    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
+                                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
+                    
+                    /* Set PWM0 timer clock prescaler */
+                    PWM_SET_PRESCALER(PWM0, 0, 47); // 48MHz/(47+1)=1MHz
+                    
+                    /* Set counter to up counting */
+                    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_UP_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
+                    
+                    /* Set PWM0 duty */
+                    PWM_SET_CMR(PWM0, 0, modeMsg.Data[1]);
+
+                    PA1 = modeMsg.Data[2] & 0x1;
+                    
+                    /* Set PWM0 period */
+                    PWM_SET_CNR(PWM0, 0, 99); // 1MHz/(99+1)=10KHz
+
+                    /* Set output level at zero, compare up, period(center) and compare down of specified channel */
+                    PWM_SET_OUTPUT_LEVEL(PWM0, BIT0, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
+
+                    /* Inverse the output polarity since we are in complementary mode */
+                    PWM_ENABLE_OUTPUT_INVERTER(PWM0, BIT1);
+
+                    /* Enable output of PWM0 channel 1 */
+                    PWM_EnableOutput(PWM0, BIT1);
+
+                    /* Enable PWM0 channel 1 counter */
+                    PWM_Start(PWM0, BIT0); // CNTEN1
                 default: 
                     break;
             }
