@@ -9,7 +9,6 @@
 #include <stdio.h>
 #include "NuMicro.h"
 #include "delay.h"
-#include "servo.h"
 
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
 
@@ -60,9 +59,6 @@ void SYS_Init(void)
 
 int main()
 {
-    /* Create a Servo object */
-    STR_SERVO_T servo = {0};
-
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -74,25 +70,46 @@ int main()
     printf("Press any key to start.\n");
     getchar();
 
-    servo_attach(&servo, PWM0, PWM_CH_1_MASK, &PA0);
+    /* Set PA multi-function pins for PWM0 Channel 1 */
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
+                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
 
-    /* Move the servo back and forth */
+    /* Set PWM0 timer clock prescaler */
+    PWM_SET_PRESCALER(PWM0, 1, 47); // 48MHz/(47+1)=1MHz
+
+    /* Set counter to up counting */
+    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_UP_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
+
+    /* Set PWM0 duty */
+    PWM_SET_CMR(PWM0, 1, 0);
+
+    /* Set PWM0 period */
+    PWM_SET_CNR(PWM0, 1, 99); // 1MHz/(99+1)=10KHz
+
+    /* Set output level at zero, compare up, period(center) and compare down of specified channel */
+    PWM_SET_OUTPUT_LEVEL(PWM0, BIT1, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
+
+    /* Enable output of PWM0 channel 1 */
+    PWM_EnableOutput(PWM0, BIT1);
+
+    /* Enable PWM0 channel 1 counter */
+    PWM_Start(PWM0, BIT1); // CNTEN1
+
+    /* Spin up and down the Nidec motor */
     while(1)
     {
-        for(int i=1; i<=180; i++)
+        for(int i=1; i<=100; i++)
         {
-            //PWM_SET_CMR(PWM0, 1, 60+i);
-            servo_write(&servo, i);
+            PWM_SET_CMR(PWM0, 1, i);
             delay(100);
         }
         delay(2000);
-        for(int i=179; i>=0; i--)
+        for(int i=100; i>=0; i--)
         {
-            //PWM_SET_CMR(PWM0, 1, 60+i);
-            servo_write(&servo, i);
+            PWM_SET_CMR(PWM0, 1, i);
             delay(100);
         }
-        delay(2000);
+        delay(5000);
     }
 }
 
