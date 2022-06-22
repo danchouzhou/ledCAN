@@ -7,17 +7,14 @@ uint32_t servo_attached(STR_SERVO_T *pServo)
     return pServo->u32isAttached;
 }
 
-uint32_t servo_attach(STR_SERVO_T *pServo, PWM_T *pwm, uint32_t u32pwmChannelMask, volatile uint32_t *pu32pdio)
+uint32_t servo_attach(STR_SERVO_T *pServo)
 {
     /* Check if already configured */
     if (pServo->u32isAttached)
         return pServo->u32isAttached;
-    
-    pServo->pwm = pwm;
-    pServo->u32pwmChannelMask = u32pwmChannelMask;
-    pServo->pu32pdio = pu32pdio;
 
-    pServo->u32gpioMfpSave = SYS->GPA_MFP0;
+    /* Save the MFP settings */
+    pServo->u32gpioMFPsave = SYS->GPA_MFP0;
 
     /* Set PA multi-function pins for PWM0 Channel 1 */
     SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
@@ -38,16 +35,18 @@ uint32_t servo_attach(STR_SERVO_T *pServo, PWM_T *pwm, uint32_t u32pwmChannelMas
     PWM_SET_CNR(PWM0, 1, 499); // 100KHz/500=200Hz
 
     /* Set output level at zero, compare up, period(center) and compare down of specified channel */
-    PWM_SET_OUTPUT_LEVEL(PWM0, BIT1, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
+    PWM_SET_OUTPUT_LEVEL(PWM0, PWM_CH_1_MASK, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
 
     /* Enable output of PWM0 channel 1 */
-    PWM_EnableOutput(PWM0, BIT1);
+    PWM_EnableOutput(PWM0, PWM_CH_1_MASK);
 
-    /* Enable PWM0 channel 1 counter */
-    PWM_Start(PWM0, BIT1); // CNTEN1
+    /* Enable PWM0 channel 1 counter (PWM_CNT0) */
+    PWM_Start(PWM0, PWM_CH_1_MASK);
 
+    /* Mark as attach */
     pServo->u32isAttached = 1;
 
+    /* Return success */
     return pServo->u32isAttached;
 }
 
@@ -59,6 +58,8 @@ uint8_t servo_write(STR_SERVO_T *pServo, uint8_t u8degree)
     PWM_SET_CMR(PWM0, 1, 60 + u8degree);
 
     pServo->u8degree = u8degree;
+
+    return pServo->u8degree;
 }
 
 uint8_t servo_read(STR_SERVO_T *pServo)
@@ -68,5 +69,13 @@ uint8_t servo_read(STR_SERVO_T *pServo)
 
 void servo_detach(STR_SERVO_T *pServo)
 {
-    SYS->GPA_MFP0 = pServo->u32gpioMfpSave;
+    /* Mark as detach */
+    pServo->u32isAttached = 0;
+
+    /* Stop the PWM */
+    PWM_ForceStop(PWM0, PWM_CH_1_MASK);
+
+    /* Restore MFP settings */
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) | 
+                    (pServo->u32gpioMFPsave & SYS_GPA_MFP0_PA0MFP_Msk);
 }
