@@ -384,6 +384,7 @@ int main()
     volatile STR_CANMSG_T *pModeMsg = &modeMsg;
 
     uint32_t u32ModeID = 0;
+    uint32_t u32Mode = 0;
 
     /* Unlock protected registers */
     SYS_UnlockReg();
@@ -453,6 +454,17 @@ int main()
         {
             /* Clear synchronous flag */
             g_u32SyncFlag = 0;
+
+            if (u32Mode != pModeMsg->Data[0])
+            {
+                if (pModeMsg->Data[0] != 7)
+                    servo_detach(&servo);
+                
+                if (pModeMsg->Data[0] != 8)
+                    nidec_detach(&nidec);
+
+                u32Mode = pModeMsg->Data[0];
+            }
 
             switch (pModeMsg->Data[0]) {
                 case 0: // idel
