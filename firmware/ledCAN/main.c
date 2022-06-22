@@ -4,6 +4,7 @@
 #include "delay.h"
 #include "pid.h"
 #include "servo.h"
+#include "nidec.h"
 
 /* Hardware configuration */
 #define LED_PIN             PA0
@@ -23,6 +24,9 @@ void colorWipe(STR_NEOPIXEL_T *pNeoPixel, uint8_t r, uint8_t g, uint8_t b, int w
 
 /* Create a Servo object */
 STR_SERVO_T servo = {0};
+
+/* Create a Nidec motor object */
+STR_NIDEC_T nidec = {0};
 
 /* Create CAN message object */
 STR_CANMSG_T rrMsg;
@@ -415,11 +419,11 @@ int main()
     /* Set message object 1 arbitration = 0x201 (513) */
     CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, u32ModeID);
 
-    /* Initialize NeoPixel */
+    /* Initialize NeoPixel, will update length later in main functions */
     NeoPixel_begin(&pixels, 0, &LED_PIN, NEO_GRB);
 
     /* Turn OFF all pixels ASAP */
-    NeoPixel_show(&pixels);
+    //NeoPixel_show(&pixels);
 
     /* Set the maxmium brightness for NeoPixels */
     NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
@@ -572,35 +576,8 @@ int main()
                     servo_write(&servo, modeMsg.Data[1]);
                     break;
                 case 8: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
-                    /* Set PA multi-function pins for PWM0 Channel 1 */
-                    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk)) |
-                                    (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
-                    
-                    /* Set PWM0 timer clock prescaler */
-                    PWM_SET_PRESCALER(PWM0, 0, 47); // 48MHz/(47+1)=1MHz
-                    
-                    /* Set counter to up counting */
-                    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_UP_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
-                    
-                    /* Set PWM0 duty */
-                    PWM_SET_CMR(PWM0, 0, modeMsg.Data[1]);
-
-                    PA1 = modeMsg.Data[2] & 0x1;
-                    
-                    /* Set PWM0 period */
-                    PWM_SET_CNR(PWM0, 0, 99); // 1MHz/(99+1)=10KHz
-
-                    /* Set output level at zero, compare up, period(center) and compare down of specified channel */
-                    PWM_SET_OUTPUT_LEVEL(PWM0, BIT0, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
-
-                    /* Inverse the output polarity since we are in complementary mode */
-                    PWM_ENABLE_OUTPUT_INVERTER(PWM0, BIT1);
-
-                    /* Enable output of PWM0 channel 1 */
-                    PWM_EnableOutput(PWM0, BIT1);
-
-                    /* Enable PWM0 channel 1 counter */
-                    PWM_Start(PWM0, BIT0); // CNTEN1
+                    nidec_attach(&nidec);
+                    nidec_write(&nidec, modeMsg.Data[1], modeMsg.Data[2] & 0x1);
                 default: 
                     break;
             }
