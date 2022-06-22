@@ -237,14 +237,15 @@ void CAN_Init()
 
 void PWM0_Init()
 {
-    /* Set Pwm mode as complementary mode */
-    PWM_ENABLE_COMPLEMENTARY_MODE(PWM0);
+    /* Set PWM mode as complementary mode */
+    //PWM_ENABLE_COMPLEMENTARY_MODE(PWM0);
+    PWM0->CTL1 |= PWM_CTL1_PWMMODE2_Msk;
 
     /* Set PWM0 timer clock prescaler */
     PWM_SET_PRESCALER(PWM0, 2, 0);
 
-    /* Set up counter type */
-    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE2_Msk)) | (PWM_DOWN_COUNTER << PWM_CTL1_CNTTYPE2_Pos);
+    /* Set counter to up counting */
+    PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE2_Msk)) | (PWM_UP_COUNTER << PWM_CTL1_CNTTYPE2_Pos);
 
     /* Set PWM0 timer duty */
     PWM_SET_CMR(PWM0, 2, 24);
@@ -262,7 +263,7 @@ void PWM0_Init()
     SYS_LockReg();
 
     /* Set output level at zero, compare up, period(center) and compare down of specified channel */
-    PWM_SET_OUTPUT_LEVEL(PWM0, BIT2, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING, PWM_OUTPUT_LOW, PWM_OUTPUT_HIGH);
+    PWM_SET_OUTPUT_LEVEL(PWM0, PWM_CH_2_MASK, PWM_OUTPUT_HIGH, PWM_OUTPUT_LOW, PWM_OUTPUT_NOTHING, PWM_OUTPUT_NOTHING);
 
     /* Enable output of PWM0 channel 2 and 3 */
     PWM_EnableOutput(PWM0, 0xc);
@@ -439,7 +440,7 @@ int main()
     TIMER_Start(TIMER0);
 
     /* Enable PWM0 channel 2 counter */
-    PWM_Start(PWM0, 0x4); // CNTEN2
+    PWM_Start(PWM0, PWM_CH_2_MASK); // CNTEN2
 
     /* Got no where to go, just loop forever */
     while(1)
