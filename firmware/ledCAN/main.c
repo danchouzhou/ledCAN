@@ -567,7 +567,7 @@ int main()
 
                     break;
                 case 7: // servo, degree
-                    servo_attach(&servo, PWM0, PWM_CH_1_MASK, &PA0);
+                    servo_attach(&servo);
                     servo_write(&servo, modeMsg.Data[1]);
                     break;
                 case 8: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
