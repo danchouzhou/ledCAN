@@ -21,7 +21,7 @@ uint32_t nidec_attach(STR_NIDEC_T *pNidec)
                     (SYS_GPA_MFP0_PA0MFP_PWM0_CH1);
 
     /* Set PWM0 timer clock prescaler */
-    PWM_SET_PRESCALER(PWM0, 1, 479); // 48MHz/480=100KHz
+    PWM_SET_PRESCALER(PWM0, 1, 47); // 48MHz/(47+1)=1MHz
 
     /* Set counter to up counting */
     PWM0->CTL1 = (PWM0->CTL1 & ~(PWM_CTL1_CNTTYPE0_Msk)) | (PWM_UP_COUNTER << PWM_CTL1_CNTTYPE0_Pos);
