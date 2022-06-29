@@ -565,10 +565,10 @@ int main()
                     modeMsg.FrameType = CAN_DATA_FRAME;
                     modeMsg.IdType = CAN_STD_ID;
                     modeMsg.Id = u32ModeID;
-                    modeMsg.DLC = 3;
                     
                     while(pModeMsg->Data[0] == 6) // leave if mode has been change
                     {
+                        modeMsg.DLC = 3;
                         //modeMsg.Data[0] = 6;
                         modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF);
                         modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F);
