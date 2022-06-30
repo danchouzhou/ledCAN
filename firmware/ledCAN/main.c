@@ -590,6 +590,20 @@ int main()
                 case 8: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
                     nidec_attach(&nidec);
                     nidec_write(&nidec, modeMsg.Data[1], modeMsg.Data[2] & 0x1);
+                    
+                    // Stop the Nidec motor if there is no update
+                    modeMsg.Data[1] = 0;
+                    while(modeMsg.Data[1] == 0 || g_u32SyncFlag == 0)
+                    {
+                        if (timeout(200) == 0)
+                        {
+                            nidec_write(&nidec, modeMsg.Data[1], modeMsg.Data[2] & 0x1);
+                        }
+                    }
+
+                    timeout(0); // Stop the timeout progress
+
+                    break;                    
                 default: 
                     break;
             }
