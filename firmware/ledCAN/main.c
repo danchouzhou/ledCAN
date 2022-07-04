@@ -452,9 +452,6 @@ int main()
     {
         if (g_u32SyncFlag == 1)
         {
-            /* Clear synchronous flag */
-            g_u32SyncFlag = 0;
-
             if (u32Mode != pModeMsg->Data[0])
             {
                 if (pModeMsg->Data[0] != 7)
@@ -607,6 +604,9 @@ int main()
                 default: 
                     break;
             }
+            
+            /* Clear synchronous flag */
+            g_u32SyncFlag = 0;
         }
     }
 }
