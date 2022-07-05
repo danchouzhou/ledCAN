@@ -8,8 +8,34 @@
 *****************************************************************************/
 #include <stdio.h>
 #include "NuMicro.h"
+#include "delay.h"
 
 void UART_Open(UART_T *uart, uint32_t u32baudrate);
+
+volatile int64_t g_i64EncoderCnt = 0;
+
+void GPAB_IRQHandler(void)
+{
+    volatile uint32_t temp;
+
+    /* To check if PA.0 interrupt occurred */
+    if(GPIO_GET_INT_FLAG(PA, BIT0))
+    {
+        GPIO_CLR_INT_FLAG(PA, BIT0);
+        //printf("PA.0 INT occurred.\n");
+        if (PA1 == 0) // CW
+            g_i64EncoderCnt++;
+        else // CCW
+            g_i64EncoderCnt--;
+    }
+    else
+    {
+        /* Un-expected interrupt. Just clear all PA interrupts */
+        temp = PA->INTSRC;
+        PA->INTSRC = temp;
+        //printf("Un-expected interrupts.\n");
+    }
+}
 
 void SYS_Init(void)
 {
@@ -52,6 +78,8 @@ void SYS_Init(void)
 
 int main()
 {
+    int64_t i64EncoderCntTmp;
+
     SYS_Init();
 
     /* Init UART0 to 115200-8n1 for print message */
@@ -60,8 +88,33 @@ int main()
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("Hello World\n");
 
+    printf("Press any key to start.\n");
+    getchar();
+
+    /* Set PA multi-function pins for GPIO */
+    SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk | SYS_GPA_MFP0_PA1MFP_Msk));
+
+    /* Set GPIO mode as Quasi-bidirectional mode */
+    GPIO_SetMode(PA, BIT0 | BIT1, GPIO_MODE_QUASI); // PA0, PA1
+
+    /* Select de-bounce sampling cycle */
+    GPIO_SET_DEBOUNCE_TIME(GPIO_DBCTL_DBCLKSRC_HCLK, GPIO_DBCTL_DBCLKSEL_64);
+
+    /* Enable interrupt de-bounce function */
+    GPIO_ENABLE_DEBOUNCE(PA, BIT0);
+
+    /* Enable interrupt by rising edge trigger */
+    GPIO_EnableInt(PA, 0, GPIO_INT_RISING);
+    NVIC_EnableIRQ(GPIO_PAPB_IRQn);
+
     /* Got no where to go, just loop forever */
-    while(1);
+    while(1)
+    {
+        i64EncoderCntTmp = g_i64EncoderCnt;
+        g_i64EncoderCnt = 0;
+        printf("Count: %d\r\n", (int)i64EncoderCntTmp);
+        delay(2000);
+    }
 }
 
 /*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
