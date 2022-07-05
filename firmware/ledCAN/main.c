@@ -36,6 +36,30 @@ STR_PID_T PFM_PID = {0};
 
 volatile uint32_t g_u32SyncFlag = 0;
 volatile uint32_t g_u32AdCh0Data = 0;
+volatile int64_t g_i64EncoderCnt = 0;
+
+void GPAB_IRQHandler(void)
+{
+    volatile uint32_t temp;
+
+    /* To check if PA.0 interrupt occurred */
+    if(GPIO_GET_INT_FLAG(PA, BIT0))
+    {
+        GPIO_CLR_INT_FLAG(PA, BIT0);
+        //printf("PA.0 INT occurred.\n");
+        if (PA1 == 0) // CW
+            g_i64EncoderCnt++;
+        else // CCW
+            g_i64EncoderCnt--;
+    }
+    else
+    {
+        /* Un-expected interrupt. Just clear all PA interrupts */
+        temp = PA->INTSRC;
+        PA->INTSRC = temp;
+        //printf("Un-expected interrupts.\n");
+    }
+}
 
 void ADC_IRQHandler(void)
 {
@@ -417,7 +441,7 @@ int main()
     /* Set message object 0 for synchronous arbitration = 0x200 (512) */
     CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, 0x200);
 
-    /* Set message object 1 arbitration = 0x201 (513) */
+    /* Set message object 1 for mode setup arbitration = from data flash */
     CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, u32ModeID);
 
     /* Initialize NeoPixel, will update length later in main functions */
@@ -600,7 +624,15 @@ int main()
 
                     timeout(0); // Stop the timeout progress
 
-                    break;                    
+                    break;
+                case 9: // Encoder
+                    GPIO_SetMode(PA, BIT0 | BIT1, GPIO_MODE_QUASI); // PA0, PA1
+                    GPIO_SET_DEBOUNCE_TIME(GPIO_DBCTL_DBCLKSRC_HCLK, GPIO_DBCTL_DBCLKSEL_64);
+                    GPIO_ENABLE_DEBOUNCE(PA, BIT0);
+                    GPIO_EnableInt(PA, 0, GPIO_INT_RISING);
+                    NVIC_EnableIRQ(GPIO_PAPB_IRQn);
+
+                    break;                
                 default: 
                     break;
             }
