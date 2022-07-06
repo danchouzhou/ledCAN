@@ -631,6 +631,7 @@ int main()
                 case 9: // Encoder
                     SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk | SYS_GPA_MFP0_PA1MFP_Msk));
                     GPIO_SetMode(PA, BIT0 | BIT1, GPIO_MODE_QUASI); // PA0, PA1
+                    PA0=1; PA1=1; // Pull up the GPIO
                     GPIO_SET_DEBOUNCE_TIME(GPIO_DBCTL_DBCLKSRC_HCLK, GPIO_DBCTL_DBCLKSEL_64);
                     GPIO_ENABLE_DEBOUNCE(PA, BIT0);
                     GPIO_EnableInt(PA, 0, GPIO_INT_RISING);
@@ -645,20 +646,21 @@ int main()
                     {
                         i64EncoderCntTmp = g_i64EncoderCnt;
                         g_i64EncoderCnt = 0;
-                        ttMsg.Data[0] = (uint8_t)(g_i64EncoderCnt & 0xFF);
-                        ttMsg.Data[1] = (uint8_t)(g_i64EncoderCnt>>8 & 0xFF);
-                        ttMsg.Data[2] = (uint8_t)(g_i64EncoderCnt>>16 & 0xFF);
-                        ttMsg.Data[3] = (uint8_t)(g_i64EncoderCnt>>24 & 0xFF);
-                        ttMsg.Data[4] = (uint8_t)(g_i64EncoderCnt>>32 & 0xFF);
-                        ttMsg.Data[5] = (uint8_t)(g_i64EncoderCnt>>40 & 0xFF);
-                        ttMsg.Data[6] = (uint8_t)(g_i64EncoderCnt>>48 & 0xFF);
-                        ttMsg.Data[7] = (uint8_t)(g_i64EncoderCnt>>56 & 0xFF);
+                        ttMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF);
+                        ttMsg.Data[1] = (uint8_t)(i64EncoderCntTmp>>8 & 0xFF);
+                        ttMsg.Data[2] = (uint8_t)(i64EncoderCntTmp>>16 & 0xFF);
+                        ttMsg.Data[3] = (uint8_t)(i64EncoderCntTmp>>24 & 0xFF);
+                        ttMsg.Data[4] = (uint8_t)(i64EncoderCntTmp>>32 & 0xFF);
+                        ttMsg.Data[5] = (uint8_t)(i64EncoderCntTmp>>40 & 0xFF);
+                        ttMsg.Data[6] = (uint8_t)(i64EncoderCntTmp>>48 & 0xFF);
+                        ttMsg.Data[7] = (uint8_t)(i64EncoderCntTmp>>56 & 0xFF);
                         CAN_Transmit(CAN, MSG(2), &ttMsg); // Use msg 2 transmit
                         delay(100);
                     }
 
                     GPIO_DisableInt(PA, 0);
                     NVIC_DisableIRQ(GPIO_PAPB_IRQn);
+                    PA0=0; PA1=0;
 
                     break;                
                 default: 
