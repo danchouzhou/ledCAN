@@ -594,8 +594,8 @@ int main()
                     {
                         modeMsg.DLC = 3;
                         //modeMsg.Data[0] = 6;
-                        modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF);
-                        modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F);
+                        modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF); // MSB
+                        modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F); // LSB
                         CAN_Transmit(CAN, MSG(2), &modeMsg); // Use msg 2 transmit
                         delay(10);
                     }
@@ -646,14 +646,14 @@ int main()
                     {
                         i64EncoderCntTmp = g_i64EncoderCnt;
                         g_i64EncoderCnt = 0;
-                        ttMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF);
+                        ttMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF); // MSB
                         ttMsg.Data[1] = (uint8_t)(i64EncoderCntTmp>>8 & 0xFF);
                         ttMsg.Data[2] = (uint8_t)(i64EncoderCntTmp>>16 & 0xFF);
                         ttMsg.Data[3] = (uint8_t)(i64EncoderCntTmp>>24 & 0xFF);
                         ttMsg.Data[4] = (uint8_t)(i64EncoderCntTmp>>32 & 0xFF);
                         ttMsg.Data[5] = (uint8_t)(i64EncoderCntTmp>>40 & 0xFF);
                         ttMsg.Data[6] = (uint8_t)(i64EncoderCntTmp>>48 & 0xFF);
-                        ttMsg.Data[7] = (uint8_t)(i64EncoderCntTmp>>56 & 0xFF);
+                        ttMsg.Data[7] = (uint8_t)(i64EncoderCntTmp>>56 & 0xFF); // LSB
                         CAN_Transmit(CAN, MSG(2), &ttMsg); // Use msg 2 transmit
                         delay(100);
                     }
