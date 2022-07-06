@@ -645,14 +645,14 @@ int main()
                     {
                         i64EncoderCntTmp = g_i64EncoderCnt;
                         g_i64EncoderCnt = 0;
-                        ttMsg.Data[0] = 6;
-                        ttMsg.Data[1] = (uint8_t)(g_i64EncoderCnt & 0xFF);
-                        ttMsg.Data[2] = (uint8_t)(g_i64EncoderCnt>>8 & 0xFF);
-                        ttMsg.Data[3] = (uint8_t)(g_i64EncoderCnt>>16 & 0xFF);
+                        ttMsg.Data[0] = (uint8_t)(g_i64EncoderCnt & 0xFF);
+                        ttMsg.Data[1] = (uint8_t)(g_i64EncoderCnt>>8 & 0xFF);
+                        ttMsg.Data[2] = (uint8_t)(g_i64EncoderCnt>>16 & 0xFF);
+                        ttMsg.Data[3] = (uint8_t)(g_i64EncoderCnt>>24 & 0xFF);
                         ttMsg.Data[4] = (uint8_t)(g_i64EncoderCnt>>32 & 0xFF);
-                        ttMsg.Data[5] = (uint8_t)(g_i64EncoderCnt>>64 & 0xFF);
-                        ttMsg.Data[6] = (uint8_t)(g_i64EncoderCnt>>128 & 0xFF);
-                        ttMsg.Data[7] = (uint8_t)(g_i64EncoderCnt>>256 & 0xFF);
+                        ttMsg.Data[5] = (uint8_t)(g_i64EncoderCnt>>40 & 0xFF);
+                        ttMsg.Data[6] = (uint8_t)(g_i64EncoderCnt>>48 & 0xFF);
+                        ttMsg.Data[7] = (uint8_t)(g_i64EncoderCnt>>56 & 0xFF);
                         CAN_Transmit(CAN, MSG(2), &ttMsg); // Use msg 2 transmit
                         delay(100);
                     }
