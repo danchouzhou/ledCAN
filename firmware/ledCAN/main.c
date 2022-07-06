@@ -646,6 +646,9 @@ int main()
                     {
                         i64EncoderCntTmp = g_i64EncoderCnt;
                         g_i64EncoderCnt = 0;
+
+                        if (pModeMsg->Data[1])
+                            i64EncoderCntTmp = 0 - i64EncoderCntTmp;
                         ttMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF); // MSB
                         ttMsg.Data[1] = (uint8_t)(i64EncoderCntTmp>>8 & 0xFF);
                         ttMsg.Data[2] = (uint8_t)(i64EncoderCntTmp>>16 & 0xFF);
