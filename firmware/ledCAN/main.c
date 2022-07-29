@@ -533,6 +533,7 @@ int main()
                         delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
                     }
                     NeoPixel_clear(&pixels);
+                    NeoPixel_show(&pixels);
                     NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
                     break;
                 case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
