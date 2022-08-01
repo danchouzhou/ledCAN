@@ -556,9 +556,9 @@ int main()
                             NeoPixel_setPixelColor(&pixels, i-modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
                         }
                         NeoPixel_show(&pixels);
-                        delay(modeMsg.Data[5]);
+                        delay(modeMsg.Data[6]);
                     }
-                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[6]; i>=-(int)modeMsg.Data[6]; i--)
+                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[5]; i>=-(int)modeMsg.Data[5]; i--)
                     {
                         if(i<0)
                         {
@@ -570,7 +570,7 @@ int main()
                             NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
                         }
                         NeoPixel_show(&pixels);
-                        delay(modeMsg.Data[5]);
+                        delay(modeMsg.Data[6]);
                     }
                     break;
                 case 6: // Get PA1 ADC value every 10ms
