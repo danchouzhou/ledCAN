@@ -17,14 +17,14 @@ IPATH= . \
        ../M0A21BSP/Library/CMSIS/Include \
        ../M0A21BSP/Library/Device/Nuvoton/M0A21/Include \
        ../M0A21BSP/Library/StdDriver/inc \
-       ../Library \
+       ../NuLibrary \
        User
 SRC=$(wildcard \
        *.c \
        ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/*.c \
        ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/GCC/*.c \
        ../M0A21BSP/Library/StdDriver/src/*.c \
-       ../Library/*.c \
+       ../NuLibrary/*.c \
        User/*.c \
 )
 OBJS = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
