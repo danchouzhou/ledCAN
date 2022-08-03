@@ -1,3 +1,6 @@
 [submodule "firmware/M0A21BSP"]
 	path = firmware/M0A21BSP
 	url = https://github.com/OpenNuvoton/M0A21BSP.git
+[submodule "firmware/NuLibrary"]
+	path = firmware/NuLibrary
+	url = https://github.com/danchouzhou/NuLibrary.git
