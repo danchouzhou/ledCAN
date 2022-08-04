@@ -1,15 +1,30 @@
 #include <stdio.h>
 #include "NuMicro.h"
 #include "delay.h"
+#include "analog.h"
 #include "arm_math.h"
 
-void UART_Open(UART_T *uart, uint32_t u32baudrate);
+/**
+  * @brief      Read Built-in Band-Gap conversion value
+  * @param[in]  None
+  * @return     Built-in Band-Gap conversion value
+  * @details    This function is used to read Band-Gap conversion value.
+  */
+__STATIC_INLINE uint32_t FMC_ReadBandGap(void)
+{
+    FMC->ISPCMD = FMC_ISPCMD_READ_UID;            /* Set ISP Command Code */
+    FMC->ISPADDR = 0x70u;                         /* Must keep 0x70 when read Band-Gap */
+    FMC->ISPTRG = FMC_ISPTRG_ISPGO_Msk;           /* Trigger to start ISP procedure */
+#if ISBEN
+    __ISB();
+#endif                                            /* To make sure ISP/CPU be Synchronized */
+    while(FMC->ISPTRG & FMC_ISPTRG_ISPGO_Msk) {}  /* Waiting for ISP Done */
+
+    return FMC->ISPDAT & 0xFFF;
+}
 
 void SYS_Init(void)
 {
-    /* Unlock protected registers */
-    SYS_UnlockReg();
-
     /* Enable HIRC clock (Internal RC 48MHz) */
     CLK_EnableXtalRC(CLK_PWRCTL_HIRCEN_Msk);
 
@@ -31,6 +46,9 @@ void SYS_Init(void)
     /* Switch UART0 clock source to HIRC */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
 
+    /* Switch ADC clock source to HIRC, set divider to 96, ADC clock is 500 KHz */
+    CLK_SetModuleClock(ADC_MODULE, CLK_CLKSEL2_ADCSEL_HIRC, CLK_CLKDIV0_ADC(96));
+
     /* Update System Core Clock */
     SystemCoreClockUpdate();
 
@@ -43,9 +61,6 @@ void SYS_Init(void)
 
     /* Configure the PC.3 ADC analog input pins. */
     SYS->GPC_MFP0 = (SYS->GPC_MFP0 & ~(SYS_GPC_MFP0_PC3MFP_Msk)) | SYS_GPC_MFP0_PC3MFP_ADC0_CH12;
-
-    /* Lock protected registers */
-    SYS_LockReg();
 }
 
 void PWM_Init()
@@ -80,8 +95,8 @@ void ADC_Init()
     /* Enable ADC converter */
     ADC_POWER_ON(ADC);
     
-    /* Set input mode as single-end, Single mode, and select channel 12 */
-    ADC_Open(ADC, ADC_ADCR_DIFFEN_SINGLE_END, ADC_ADCR_ADMD_SINGLE_CYCLE, BIT12);
+    /* Set input mode as single-end, Single mode */
+    ADC_Open(ADC, ADC_ADCR_DIFFEN_SINGLE_END, ADC_ADCR_ADMD_SINGLE_CYCLE, 0);
 }
 
 void Note_Configure()
@@ -115,13 +130,26 @@ void Note_Configure()
 
 int main()
 {
-    const int16_t i16Target = 1024;
     arm_pid_instance_q15 PID;
-    int16_t i16Current, i16Error, i16Duty;
+    int16_t i16Target, i16Current, i16Error, i16Duty;
+
+    int32_t  i32BuiltInData, i32ConversionData;
 
     uint32_t u32Timestamp = 0;
 
+    /* Unlock protected registers */
+    SYS_UnlockReg();
+
+    /* Init System, IP clock and multi-function I/O. */
     SYS_Init();
+
+    /* Enable FMC ISP function to read built-in band-gap A/D conversion result*/
+    FMC_Open();
+    i32BuiltInData = FMC_ReadBandGap();
+    FMC_Close();
+
+    /* Lock protected registers */
+    SYS_LockReg();
 
     /* Init UART0 to 115200-8n1 for print message */
     UART_Open(UART0, 115200);
@@ -137,19 +165,25 @@ int main()
     arm_pid_init_q15(&PID, 1);
 
     /* Connect UART to PC, and open a terminal tool to receive following message */
-    printf("Hello World\n");
+    printf("\n\nHello World\n");
+
+    /* Get the conversion data of band-gap voltage */
+    i32ConversionData = analogRead(29);
+
+    printf("AVdd =  3072 * i32BuiltInData / i32ConversionData     \n");
+    printf("AVdd = 3072 * %d / %d = %d mV \r\n\n", i32BuiltInData, i32ConversionData, 3072*i32BuiltInData/i32ConversionData);
+    i16Target = "Not finish yet";
+    printf("The target value of 2.5V is %d\r\n", i16Target);
     Note_Configure();
     printf("Press any key to start.\n");
     getchar();
 
+    ADC_SET_INPUT_CHANNEL(ADC, BIT12);
+
     /* Got no where to go, just loop forever */
     while(1)
     {
-        
-        ADC_START_CONV(ADC);
-        while(ADC_IS_DATA_VALID(ADC, 12) == 0);
-
-        i16Current = ADC_GET_CONVERSION_DATA(ADC, 12);
+        i16Current = analogRead(12);
         i16Error = i16Target - i16Current;
         i16Duty = arm_pid_q15(&PID, i16Error);
 
@@ -171,5 +205,3 @@ int main()
         delay(200);
     }
 }
-
-/*** (C) COPYRIGHT 2017 Nuvoton Technology Corp. ***/
