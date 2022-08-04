@@ -25,3 +25,8 @@ sudo make install
 
 ## Credits
 We are thankful that [Nuvoton corporation](https://www.nuvoton.com) (MCU),[PANJIT](https://www.panjit.com.tw) (MOSFET), [EDOM Technology](https://www.edomtech.com) (MPS MPQ4569GQ) and [Texas Instruments](https://ti.com) (CAN SBC) provide samples and technical support.
+
+## Datasheet
+[Nuvoton NuMicro M0A21/M0A23](https://www.nuvoton.com/export/resource-files/TRM_M0A21_M0A23_Series_EN_Rev1.02.pdf)
+
+## Reference documents
