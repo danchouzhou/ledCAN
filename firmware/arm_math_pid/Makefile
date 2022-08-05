@@ -28,21 +28,21 @@ BSP=$(wildcard \
 )
 LIB=$(wildcard \
        ../NuLibrary/*.c \
-       User/*.c \
 )
-SRC=$(wildcard \
+USR=$(wildcard \
        *.c \
+       User/*.c \
 )
 OBJ_BSP = $(patsubst %.c,./Objects/%.o,$(notdir $(BSP)))
 OBJ_LIB = $(patsubst %.c,./Objects/%.o,$(notdir $(LIB)))
-OBJS = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
+OBJ_USR = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
 
-$(NAME): $(OBJS) $(OBJ_LIB) $(OBJ_BSP)
+$(NAME): $(OBJ_USR) $(OBJ_LIB) $(OBJ_BSP)
 	mkdir -p ./Objects
 	cd ./Objects && $(CC) *.o $(CFLAGS) $(LFLAGS) $(STARTUP) -o $@.axf $(addprefix -I ../,$(IPATH)) 
 	$(CP) -O binary ./Objects/$@.axf ./Objects/$@.bin
 
-$(OBJS): $(SRC)
+$(OBJ_USR): $(USR)
 	mkdir -p ./Objects
 	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
 
