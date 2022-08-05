@@ -35,7 +35,7 @@ USR=$(wildcard \
 )
 OBJ_BSP = $(patsubst %.c,./Objects/%.o,$(notdir $(BSP)))
 OBJ_LIB = $(patsubst %.c,./Objects/%.o,$(notdir $(LIB)))
-OBJ_USR = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
+OBJ_USR = $(patsubst %.c,./Objects/%.o,$(notdir $(USR)))
 
 $(NAME): $(OBJ_USR) $(OBJ_LIB) $(OBJ_BSP)
 	mkdir -p ./Objects
