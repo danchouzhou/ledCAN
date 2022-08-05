@@ -103,7 +103,7 @@ void Note_Configure()
 {
     printf("\n\n");
     printf("+------------------------------------------------------------------------+\n");
-    printf("|  About the ARM DSP_Lib pid example code configure                      |\n");
+    printf("|  About the ARM DSP_Lib PID example code configure                      |\n");
     printf("+------------------------------------------------------------------------+\n");
     printf("|   This example perform a simple way to test the DSP_Lib PID library.   |\n");
     printf("|   We will use PWM feed into a low-pass filter and read the output      |\n");
@@ -167,18 +167,20 @@ int main()
 
     /* Get the conversion data of band-gap voltage */
     i32ConversionData = analogRead(29);
+    printf("AVdd =  3072 * i32BuiltInData / i32ConversionData\n");
+    printf("AVdd = 3072 * %d / %d = %d mV\r\n\n", i32BuiltInData, i32ConversionData, 3072*i32BuiltInData/i32ConversionData);
 
-    printf("AVdd =  3072 * i32BuiltInData / i32ConversionData     \n");
-    printf("AVdd = 3072 * %d / %d = %d mV \r\n\n", i32BuiltInData, i32ConversionData, 3072*i32BuiltInData/i32ConversionData);
+    /* Calculate the target value of 2500mV */
     i16Target = 2500*4096/(3072*i32BuiltInData/i32ConversionData); // 2500mV
     printf("The target value of 2500mV is %d\r\n", i16Target);
+
+
     Note_Configure();
-    printf("Press any key to start.\n");
+    printf("Press any key to continue ...\n\n");
     getchar();
 
     ADC_SET_INPUT_CHANNEL(ADC, BIT12);
 
-    /* Got no where to go, just loop forever */
     while(1)
     {
         i16Current = analogRead(12);
