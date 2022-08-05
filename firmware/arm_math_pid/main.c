@@ -156,9 +156,9 @@ int main()
 
     ADC_Init();
 
-    PID.Kp = 60;
-    PID.Ki = 500;
-    PID.Kd = 0;
+    PID.Kp = 250;
+    PID.Ki = 200;
+    PID.Kd = 50;
 
     arm_pid_init_q15(&PID, 1);
 
@@ -200,6 +200,6 @@ int main()
         /* Set PWM0 timer duty */
         PWM_SET_CMR(PWM0, 2, i16Duty);
 
-        delay(200);
+        delay(100);
     }
 }
