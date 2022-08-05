@@ -131,10 +131,8 @@ void Note_Configure()
 int main()
 {
     arm_pid_instance_q15 PID;
-    int16_t i16Target, i16Current, i16Error, i16Duty;
-
-    int32_t  i32BuiltInData, i32ConversionData;
-
+    int16_t i16Target, i16Current, i16Error, i16Duty; // PID control
+    int32_t  i32BuiltInData, i32ConversionData; // FMC_ReadBandGap()
     uint32_t u32Timestamp = 0;
 
     /* Unlock protected registers */
@@ -172,8 +170,8 @@ int main()
 
     printf("AVdd =  3072 * i32BuiltInData / i32ConversionData     \n");
     printf("AVdd = 3072 * %d / %d = %d mV \r\n\n", i32BuiltInData, i32ConversionData, 3072*i32BuiltInData/i32ConversionData);
-    i16Target = "Not finish yet";
-    printf("The target value of 2.5V is %d\r\n", i16Target);
+    i16Target = 2500*4096/(3072*i32BuiltInData/i32ConversionData); // 2500mV
+    printf("The target value of 2500mV is %d\r\n", i16Target);
     Note_Configure();
     printf("Press any key to start.\n");
     getchar();
