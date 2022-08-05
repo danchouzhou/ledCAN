@@ -19,22 +19,35 @@ IPATH= . \
        ../M0A21BSP/Library/StdDriver/inc \
        ../NuLibrary \
        User
-SRC=$(wildcard \
-       *.c \
+BSP=$(wildcard \
        ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/*.c \
        ../M0A21BSP/Library/Device/Nuvoton/M0A21/Source/GCC/*.c \
-       ../M0A21BSP/Library/StdDriver/src/*.c \
-       ../NuLibrary/*.c \
+       ../M0A21BSP/Library/StdDriver/src/fmc.c \
+)
+LIB=$(wildcard \
+)
+USR=$(wildcard \
+       *.c \
        User/*.c \
 )
-OBJS = $(patsubst %.c,./Objects/%.o,$(notdir $(SRC)))
+OBJ_BSP = $(patsubst %.c,./Objects/%.o,$(notdir $(BSP)))
+OBJ_LIB = $(patsubst %.c,./Objects/%.o,$(notdir $(LIB)))
+OBJ_USR = $(patsubst %.c,./Objects/%.o,$(notdir $(USR)))
 
-$(NAME): $(OBJS)
+$(NAME): $(OBJ_USR) $(OBJ_LIB) $(OBJ_BSP)
 	mkdir -p ./Objects
 	cd ./Objects && $(CC) *.o $(CFLAGS) $(LFLAGS) $(STARTUP) -o $@.axf $(addprefix -I ../,$(IPATH)) 
 	$(CP) -O binary ./Objects/$@.axf ./Objects/$@.bin
 
-$(OBJS): $(SRC)
+$(OBJ_USR): $(USR)
+	mkdir -p ./Objects
+	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
+
+$(OBJ_LIB): $(LIB)
+	mkdir -p ./Objects
+	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
+
+$(OBJ_BSP): $(BSP)
 	mkdir -p ./Objects
 	cd ./Objects && $(CC) $(addprefix ../,$^) $(CFLAGS) -c $(addprefix -I ../,$(IPATH))
 
