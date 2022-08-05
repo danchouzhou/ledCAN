@@ -39,6 +39,7 @@ volatile uint32_t g_u32SyncFlag = 0;
 volatile uint32_t g_u32AdCh0Data = 0;
 volatile int64_t g_i64EncoderCnt = 0;
 
+/* For encoder counting */
 void GPAB_IRQHandler(void)
 {
     volatile uint32_t temp;
@@ -266,8 +267,7 @@ void CAN_Init()
 
 void PWM0_Init()
 {
-    /* Set PWM mode as complementary mode */
-    //PWM_ENABLE_COMPLEMENTARY_MODE(PWM0);
+    /* Set PWM mode as complementary mode for channel 2 and 3 */
     PWM0->CTL1 |= PWM_CTL1_PWMMODE2_Msk;
 
     /* Set PWM0 timer clock prescaler */
