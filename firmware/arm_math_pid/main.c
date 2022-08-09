@@ -4,6 +4,33 @@
 #include "analog.h"
 #include "arm_math.h"
 
+arm_pid_instance_q15 PID;
+int16_t g_i16Target, g_i16Current, g_i16Error, g_i16Duty; // PID control
+
+void TMR0_IRQHandler(void)
+{
+    if(TIMER_GetIntFlag(TIMER0) == 1)
+    {
+        g_i16Current = analogRead(12);
+        g_i16Error = g_i16Target - g_i16Current;
+        g_i16Duty = arm_pid_q15(&PID, g_i16Error);
+
+        if(g_i16Duty < 0)
+            g_i16Duty = 0;
+        if(g_i16Duty > 100)
+            g_i16Duty = 100;
+
+        /* Set PWM0 timer duty */
+        PWM_SET_CMR(PWM0, 2, g_i16Duty);
+
+        /* Toggle GPIO indicate the interrupt */
+        GPIO_TOGGLE(PD4);
+
+        /* Clear Timer0 time-out interrupt flag */
+        TIMER_ClearIntFlag(TIMER0);
+    }
+}
+
 /**
   * @brief      Read Built-in Band-Gap conversion value
   * @param[in]  None
@@ -42,6 +69,9 @@ void SYS_Init(void)
 
     /* Enable ADC module clock */
     CLK_EnableModuleClock(ADC_MODULE);
+
+    /* Enable TIMER module clock */
+    CLK_EnableModuleClock(TMR0_MODULE);
 
     /* Switch UART0 clock source to HIRC */
     CLK_SetModuleClock(UART0_MODULE, CLK_CLKSEL1_UART0SEL_HIRC, CLK_CLKDIV0_UART0(1));
@@ -99,6 +129,27 @@ void ADC_Init()
     ADC_Open(ADC, ADC_ADCR_DIFFEN_SINGLE_END, ADC_ADCR_ADMD_SINGLE_CYCLE, 0);
 }
 
+void TMR0_Init()
+{
+    /* Open Timer0 in periodic mode */
+    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 100);
+
+    /* Enable Timer0 interrupt */
+    TIMER_EnableInt(TIMER0);
+
+    /* Enable Timer0 NVIC */
+    NVIC_EnableIRQ(TMR0_IRQn);
+}
+
+void ARM_PID_Init(arm_pid_instance_q15 *pPID)
+{
+    pPID->Kp = 300;
+    pPID->Ki = 300;
+    pPID->Kd = 10;
+
+    arm_pid_init_q15(pPID, 1);
+}
+
 void Note_Configure()
 {
     printf("\n\n");
@@ -130,8 +181,6 @@ void Note_Configure()
 
 int main()
 {
-    arm_pid_instance_q15 PID;
-    int16_t i16Target, i16Current, i16Error, i16Duty; // PID control
     int32_t  i32BuiltInData, i32ConversionData; // FMC_ReadBandGap()
     uint32_t u32Timestamp = 0;
 
@@ -156,11 +205,9 @@ int main()
 
     ADC_Init();
 
-    PID.Kp = 250;
-    PID.Ki = 200;
-    PID.Kd = 50;
+    ARM_PID_Init(&PID);
 
-    arm_pid_init_q15(&PID, 1);
+    TMR0_Init();
 
     /* Connect UART to PC, and open a terminal tool to receive following message */
     printf("\n\nHello World\n");
@@ -171,37 +218,25 @@ int main()
     printf("AVdd = 3072 * %d / %d = %d mV\r\n\n", i32BuiltInData, i32ConversionData, 3072*i32BuiltInData/i32ConversionData);
 
     /* Calculate the target value of 2500mV */
-    i16Target = 2500*4096/(3072*i32BuiltInData/i32ConversionData); // 2500mV
-    printf("The target value of 2500mV is %d\r\n", i16Target);
-
+    g_i16Target = 2500*4096/(3072*i32BuiltInData/i32ConversionData); // 2500mV
+    printf("The target value of 2500mV is %d\r\n", g_i16Target);
 
     Note_Configure();
     printf("Press any key to continue ...\n\n");
     getchar();
 
-    ADC_SET_INPUT_CHANNEL(ADC, BIT12);
+    /* Start Timer0 counting */
+    TIMER_Start(TIMER0);
 
     while(1)
     {
-        i16Current = analogRead(12);
-        i16Error = i16Target - i16Current;
-        i16Duty = arm_pid_q15(&PID, i16Error);
-
+        /* Print status every 200 ms */
         printf("\r\nTimestamp: %d\r\n", u32Timestamp++);
-        printf("i16Current: %d\r\n", i16Current);
-        printf("i16Error: %d\r\n", i16Error);
-        printf("i16Duty: %d\r\n", i16Duty);
+        printf("g_i16Current: %d\r\n", g_i16Current);
+        printf("g_i16Error: %d\r\n", g_i16Error);
+        printf("g_i16Duty: %d\r\n", g_i16Duty);
+        printf("g_i16Duty_limited: %d\r\n", g_i16Duty);
 
-        if(i16Duty < 0)
-            i16Duty = 0;
-        if(i16Duty > 100)
-            i16Duty = 100;
-
-        printf("i16Duty_limited: %d\r\n", i16Duty);
-
-        /* Set PWM0 timer duty */
-        PWM_SET_CMR(PWM0, 2, i16Duty);
-
-        delay(100);
+        delay(200);
     }
 }
