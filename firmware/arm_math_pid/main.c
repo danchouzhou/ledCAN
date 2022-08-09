@@ -13,7 +13,7 @@ void TMR0_IRQHandler(void)
     {
         g_i16Current = analogRead(12);
         g_i16Error = g_i16Target - g_i16Current;
-        g_i16Duty = arm_pid_q15(&PID, g_i16Error);
+        g_i16Duty = arm_pid_q15(&PID, g_i16Error) / 10;
 
         if(g_i16Duty < 0)
             g_i16Duty = 0;
@@ -132,7 +132,7 @@ void ADC_Init()
 void TMR0_Init()
 {
     /* Open Timer0 in periodic mode */
-    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 100);
+    TIMER_Open(TIMER0, TIMER_PERIODIC_MODE, 1000);
 
     /* Enable Timer0 interrupt */
     TIMER_EnableInt(TIMER0);
@@ -143,9 +143,9 @@ void TMR0_Init()
 
 void ARM_PID_Init(arm_pid_instance_q15 *pPID)
 {
-    pPID->Kp = 300;
-    pPID->Ki = 300;
-    pPID->Kd = 10;
+    pPID->Kp = 2500;
+    pPID->Ki = 1200;
+    pPID->Kd = 0;
 
     arm_pid_init_q15(pPID, 1);
 }
