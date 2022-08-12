@@ -400,7 +400,11 @@ void FMC_Init()
 void updateLen(STR_NEOPIXEL_T *pNeoPixel, uint16_t u16NewLen)
 {
     if(NeoPixel_numPixels(&pixels) != u16NewLen)
+    {
+        NeoPixel_clear(&pixels);
+        NeoPixel_show(&pixels);
         NeoPixel_updateLength(&pixels, u16NewLen);
+    }
 }
 
 int main()
@@ -500,7 +504,6 @@ int main()
                     updateLen(&pixels, modeMsg.Data[1]);
                     NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
                     NeoPixel_show(&pixels);
-                    NeoPixel_clear(&pixels);
                     break;
                 case 2: // wipe, numberOfLEDs, r, g, b, interval (ms)
                     updateLen(&pixels, modeMsg.Data[1]);
