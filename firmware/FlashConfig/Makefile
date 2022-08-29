@@ -5,8 +5,9 @@ STARTUP_DEFS=-D__STARTUP_CLEAR_BSS -D__START=main
 
 # Need following option for LTO as LTO will treat retarget functions as
 # unused without following option
-#CFLAGS+=-fno-builtin
-CFLAGS+=-fno-builtin -D ARM_MATH_CM0
+CFLAGS+=-fno-builtin
+# Add definition for ARM DSP Library
+CFLAGS+=-D ARM_MATH_CM0
 
 LDSCRIPTS=-L. -L$(BASE)Library/Device/Nuvoton/M0A21/Source/GCC -T gcc_arm.ld
 
