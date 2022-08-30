@@ -40,6 +40,7 @@ $(NAME): $(OBJ_USR) $(OBJ_LIB) $(OBJ_BSP)
 	mkdir -p ./Objects
 	cd ./Objects && $(CC) *.o $(CFLAGS) $(LFLAGS) $(STARTUP) -o $@.axf $(addprefix -I ../,$(IPATH)) 
 	$(CP) -O binary ./Objects/$@.axf ./Objects/$@.bin
+	$(SIZE) ./Objects/$@.axf
 
 $(OBJ_USR): $(USR)
 	mkdir -p ./Objects
