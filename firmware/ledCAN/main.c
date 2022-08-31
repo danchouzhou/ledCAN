@@ -11,6 +11,24 @@
 #define LED_PIN             PA0
 #define MAX_BRIGHTNESS      0x80 // 我們店裡的正常是半糖喔
 
+/* CAN frame */
+#define CMD_SET_SYNC_ID     0x5A
+#define CMD_SYS_RESET       0xEE
+#define MODE_IDEL           0x00
+#define MODE_NEO_FILL       0x01
+#define MODE_NEO_WIPE       0x02
+#define MODE_NEO_BLINK      0x03
+#define MODE_NEO_BREATH     0x04
+#define MODE_NEO_SCROLL     0x05
+#define MODE_ADC_PA1        0x06
+#define MODE_SERVO_PA0      0x07
+#define MODE_NIDEC_PA0      0x08
+#define MODE_ENCODER        0x09
+
+/* ISP */
+#define V6M_AIRCR_VECTKEY_DATA            0x05FA0000UL
+#define V6M_AIRCR_SYSRESETREQ             0x00000004UL
+
 /* Create a NeoPixel object */
 STR_NEOPIXEL_T pixels;
 
@@ -23,13 +41,13 @@ STR_SERVO_T servo = {0};
 STR_NIDEC_T nidec = {0};
 
 /* Create CAN message object */
-STR_CANMSG_T rrMsg;
 STR_CANMSG_T modeMsg;
-STR_CANMSG_T ttMsg;
+STR_CANMSG_T tMsg;
 
 STR_PID_T PFM_PID = {0};
 
 volatile uint32_t g_u32SyncFlag = 0;
+volatile uint32_t g_u32ModeMsgFlag = 0;
 volatile uint32_t g_u32AdCh0Data = 0;
 volatile int64_t g_i64EncoderCnt = 0;
 
@@ -97,6 +115,8 @@ void CAN_ShowMsg(STR_CANMSG_T* Msg)
 
 void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
 {
+    STR_CANMSG_T rrMsg;
+
     if(u32IIDR==1)
     {
         //printf("Msg-0 INT and Callback\n");
@@ -109,6 +129,7 @@ void CAN_MsgInterrupt(CAN_T *tCAN, uint32_t u32IIDR)
         //printf("Msg-1 INT and Callback\n");
         CAN_Receive(tCAN, 1,&modeMsg);
         //CAN_ShowMsg(&modeMsg);
+        g_u32ModeMsgFlag = 1;
     }
 }
 
@@ -195,8 +216,12 @@ int main()
     /* Create a volatile pointer to modeMsg keep the value up to date */
     volatile STR_CANMSG_T *pModeMsg = &modeMsg;
 
-    uint32_t u32ModeID = 0;
-    uint32_t u32Mode = 0;
+    uint32_t u32SyncID = 0x200; // CAN sync ID
+    uint32_t u32ModeID = 0; // CAN mode ID
+    uint8_t u8Mode, u8LastMode = 0;
+    uint8_t u8NumOfPixels, u8Red, u8Green, u8Blue; // Basic NeoPixel parameter
+    uint8_t u8Delay, u8Second, u8LengthOfSnake;
+    uint8_t u8Degree, u8Duty, u8Direction; // For Servo and Nidec motor
 
     int64_t i64EncoderCntTmp;
 
@@ -228,8 +253,8 @@ int main()
     /* Initial CAN module */
     CAN_Init();
 
-    /* Set message object 0 for synchronous arbitration = 0x200 (512) */
-    CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, 0x200);
+    /* Set message object 0 for synchronous arbitration = u32SyncID */
+    CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, u32SyncID);
 
     /* Set message object 1 for mode setup arbitration = from data flash */
     CAN_SetRxMsg(CAN, MSG(1),CAN_STD_ID, u32ModeID);
@@ -264,102 +289,117 @@ int main()
     /* Got no where to go, just loop forever */
     while(1)
     {
+        u8Mode = pModeMsg->Data[0];
+        u8NumOfPixels = pModeMsg->Data[1];
+        u8Red = pModeMsg->Data[2];
+        u8Green = pModeMsg->Data[3];
+        u8Blue = pModeMsg->Data[4];
+        u8Delay = pModeMsg->Data[5];
+        u8Second = pModeMsg->Data[5];
+        u8LengthOfSnake = pModeMsg->Data[5];
+        u8Degree = pModeMsg->Data[1];
+        u8Duty = pModeMsg->Data[1];
+        u8Direction = pModeMsg->Data[2];
+
+        if (u8Mode == CMD_SET_SYNC_ID)
+        {
+            u32SyncID = pModeMsg->Data[1] & 0xFF;
+            u32SyncID |= pModeMsg->Data[2] << 8;
+            CAN_SetRxMsg(CAN, MSG(0),CAN_STD_ID, u32SyncID);
+            pModeMsg->Data[0] = 0;
+            u8Mode = 0;
+        }
+
+        if (u8Mode == CMD_SYS_RESET)
+        {
+            
+        }
+
         if (g_u32SyncFlag == 1)
         {
-            if (u32Mode != pModeMsg->Data[0])
+            if (u8LastMode != u8Mode)
             {
-                if (pModeMsg->Data[0] != 7)
+                if (u8Mode != 7)
                     servo_detach(&servo);
                 
-                if (pModeMsg->Data[0] != 8)
+                if (u8Mode != 8)
                     nidec_detach(&nidec);
 
-                u32Mode = pModeMsg->Data[0];
+                u8LastMode = pModeMsg->Data[0];
             }
 
-            switch (pModeMsg->Data[0]) {
-                case 0: // idel
-                    updateLen(&pixels, modeMsg.Data[1]);
+            switch (u8Mode) {
+                case MODE_IDEL: // idel
+                    updateLen(&pixels, u8NumOfPixels);
                     NeoPixel_clear(&pixels);
                     NeoPixel_show(&pixels);
                     break;
-                case 1: // fill, numberOfLEDs, r, g, b
-                    updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
+                case MODE_NEO_FILL: // fill, numberOfLEDs, r, g, b
+                    updateLen(&pixels, u8NumOfPixels);
+                    NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, u8NumOfPixels);
                     NeoPixel_show(&pixels);
                     break;
-                case 2: // wipe, numberOfLEDs, r, g, b, interval (ms)
-                    updateLen(&pixels, modeMsg.Data[1]);
-                    colorWipe(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], modeMsg.Data[5]);
+                case MODE_NEO_WIPE: // wipe, numberOfLEDs, r, g, b, interval (ms)
+                    updateLen(&pixels, u8NumOfPixels);
+                    colorWipe(&pixels, u8Red, u8Green, u8Blue, u8Delay);
                     break;
-                case 3: // blink, numberOfLEDs, r, g, b, delay (second*10)
-                    updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
+                case MODE_NEO_BLINK: // blink, numberOfLEDs, r, g, b, delay (second*10)
+                    updateLen(&pixels, u8NumOfPixels);
+                    NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
                     NeoPixel_show(&pixels);
-                    delay(modeMsg.Data[5]*10);
+                    delay(u8Delay*10);
                     NeoPixel_clear(&pixels);
                     NeoPixel_show(&pixels);
                     break;
-                case 4: // breath, numberOfLEDs, r, g, b, period (second)
-                    updateLen(&pixels, modeMsg.Data[1]);
-                    for(int i=0; i<MAX_BRIGHTNESS; i+=((modeMsg.Data[5]>3)?1:5)) // Increase 5 if period <= 3 seconds
+                case MODE_NEO_BREATH: // breath, numberOfLEDs, r, g, b, period (second)
+                    updateLen(&pixels, u8NumOfPixels);
+                    for(int i=0; i<MAX_BRIGHTNESS; i+=((u8Second>3)?1:5)) // Increase 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
+                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
-                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
+                        delayMicroseconds((uint32_t)u8Second*((u8Second>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
                     }
-                    for(int i=MAX_BRIGHTNESS; i>=0; i-=((modeMsg.Data[5]>3)?1:5)) // Decrease 5 if period <= 3 seconds
+                    for(int i=MAX_BRIGHTNESS; i>=0; i-=((u8Second>3)?1:5)) // Decrease 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
+                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
-                        delayMicroseconds((uint32_t)modeMsg.Data[5]*((modeMsg.Data[5]>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
+                        delayMicroseconds((uint32_t)u8Second*((u8Second>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
                     }
+                    /* In the end, clear the persistence and set the brightness back to normal */
                     NeoPixel_clear(&pixels);
                     NeoPixel_show(&pixels);
                     NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
                     break;
-                case 5: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
+                case MODE_NEO_SCROLL: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
                     if(modeMsg.Data[1] != NeoPixel_numPixels(&pixels))
                     {
                         NeoPixel_clear(&pixels);
                         NeoPixel_show(&pixels);
                     }
-                    updateLen(&pixels, modeMsg.Data[1]);
-                    NeoPixel_fill(&pixels, modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4], 0, NeoPixel_numPixels(&pixels));
-                    for(int i=0; i<NeoPixel_numPixels(&pixels); i++)
+                    updateLen(&pixels, u8NumOfPixels);
+                    NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, u8NumOfPixels); // background color
+                    for(int i=0; i < u8NumOfPixels; i++)
                     {
-                        if(i<modeMsg.Data[6])
-                        {
-                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
-                        }
-                        else
-                        {
-                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
-                            NeoPixel_setPixelColor(&pixels, i-modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
-                        }
+                        if (i > u8LengthOfSnake)
+                            NeoPixel_setPixelColor(&pixels, i - u8LengthOfSnake, u8Red, u8Green, u8Blue);
+                        NeoPixel_setPixelColor(&pixels, i, (((uint32_t)u8Red*2>255)?255:u8Red*2), (((uint32_t)u8Green*2>255)?255:u8Green*2), (((uint32_t)u8Blue*2>255)?255:u8Blue*2));
                         NeoPixel_show(&pixels);
                         delay(modeMsg.Data[6]);
                     }
-                    for(int i=NeoPixel_numPixels(&pixels)-modeMsg.Data[5]; i>=-(int)modeMsg.Data[5]; i--)
+                    for(int i=u8NumOfPixels - 1; i >= 0; i--)
                     {
-                        if(i<0)
-                        {
-                            NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
-                        }
-                        else
-                        {
-                            NeoPixel_setPixelColor(&pixels, i, (((uint32_t)modeMsg.Data[2]*2>255)?255:modeMsg.Data[2]*2), (((uint32_t)modeMsg.Data[3]*2>255)?255:modeMsg.Data[3]*2), (((uint32_t)modeMsg.Data[4]*2>255)?255:modeMsg.Data[4]*2));
-                            NeoPixel_setPixelColor(&pixels, i+modeMsg.Data[5], modeMsg.Data[2], modeMsg.Data[3], modeMsg.Data[4]);
-                        }
+                        if(i > u8LengthOfSnake)
+                            NeoPixel_setPixelColor(&pixels, i - u8LengthOfSnake, (((uint32_t)u8Red*2>255)?255:u8Red*2), (((uint32_t)u8Green*2>255)?255:u8Green*2), (((uint32_t)u8Blue*2>255)?255:u8Blue*2));
+                        NeoPixel_setPixelColor(&pixels, i, u8Red, u8Green, u8Blue);
                         NeoPixel_show(&pixels);
                         delay(modeMsg.Data[6]);
                     }
                     break;
-                case 6: // Get PA1 ADC value every 10ms
+                case MODE_ADC_PA1: // Get PA1 ADC value every 10ms
                     /* Set PA.1 to input mode */
                     GPIO_SetMode(PA, BIT1, GPIO_MODE_INPUT);
 
@@ -373,17 +413,17 @@ int main()
                     /* Add input channel */
                     ADC->ADCHER = ADC->ADCHER | BIT1;
 
-                    modeMsg.FrameType = CAN_DATA_FRAME;
-                    modeMsg.IdType = CAN_STD_ID;
-                    modeMsg.Id = u32ModeID;
+                    tMsg.FrameType = CAN_DATA_FRAME;
+                    tMsg.IdType = CAN_STD_ID;
+                    tMsg.Id = u32ModeID;
                     
                     while(pModeMsg->Data[0] == 6) // leave if mode has been change
                     {
-                        modeMsg.DLC = 3;
-                        //modeMsg.Data[0] = 6;
-                        modeMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF); // MSB
-                        modeMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F); // LSB
-                        CAN_Transmit(CAN, MSG(2), &modeMsg); // Use msg 2 transmit
+                        tMsg.DLC = 3;
+                        tMsg.Data[0] = 6;
+                        tMsg.Data[1] = (uint8_t)(g_u32AdCh0Data & 0xFF); // MSB
+                        tMsg.Data[2] = (uint8_t)(g_u32AdCh0Data>>8 & 0x0F); // LSB
+                        CAN_Transmit(CAN, MSG(2), &tMsg); // Use msg 2 transmit
                         delay(10);
                     }
 
@@ -394,11 +434,11 @@ int main()
                     GPIO_ENABLE_DIGITAL_PATH(PA, BIT1);
 
                     break;
-                case 7: // servo, degree
+                case MODE_SERVO_PA0: // servo, degree
                     servo_attach(&servo);
-                    servo_write(&servo, modeMsg.Data[1]);
+                    servo_write(&servo, u8Degree);
                     break;
-                case 8: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
+                case MODE_NIDEC_PA0: // Nidec, duty (0-100), dir (0=CCW, 1=CW)
                     nidec_attach(&nidec);
                     nidec_write(&nidec, modeMsg.Data[1], modeMsg.Data[2] & 0x1);
                     
@@ -415,7 +455,7 @@ int main()
                     timeout(0); // Stop the timeout progress
 
                     break;
-                case 9: // Encoder
+                case MODE_ENCODER: // Encoder
                     SYS->GPA_MFP0 = (SYS->GPA_MFP0 & ~(SYS_GPA_MFP0_PA0MFP_Msk | SYS_GPA_MFP0_PA1MFP_Msk));
                     GPIO_SetMode(PA, BIT0 | BIT1, GPIO_MODE_QUASI); // PA0, PA1
                     PA0=1; PA1=1; // Pull up the GPIO
@@ -424,10 +464,10 @@ int main()
                     GPIO_EnableInt(PA, 0, GPIO_INT_RISING);
                     NVIC_EnableIRQ(GPIO_PAPB_IRQn);
 
-                    ttMsg.FrameType = CAN_DATA_FRAME;
-                    ttMsg.IdType = CAN_STD_ID;
-                    ttMsg.Id = u32ModeID;
-                    ttMsg.DLC = 8;
+                    tMsg.FrameType = CAN_DATA_FRAME;
+                    tMsg.IdType = CAN_STD_ID;
+                    tMsg.Id = u32ModeID;
+                    tMsg.DLC = 8;
 
                     while(pModeMsg->Data[0] == 9) // leave if mode has been change
                     {
@@ -436,15 +476,15 @@ int main()
 
                         if (pModeMsg->Data[1])
                             i64EncoderCntTmp = 0 - i64EncoderCntTmp;
-                        ttMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF); // MSB
-                        ttMsg.Data[1] = (uint8_t)(i64EncoderCntTmp>>8 & 0xFF);
-                        ttMsg.Data[2] = (uint8_t)(i64EncoderCntTmp>>16 & 0xFF);
-                        ttMsg.Data[3] = (uint8_t)(i64EncoderCntTmp>>24 & 0xFF);
-                        ttMsg.Data[4] = (uint8_t)(i64EncoderCntTmp>>32 & 0xFF);
-                        ttMsg.Data[5] = (uint8_t)(i64EncoderCntTmp>>40 & 0xFF);
-                        ttMsg.Data[6] = (uint8_t)(i64EncoderCntTmp>>48 & 0xFF);
-                        ttMsg.Data[7] = (uint8_t)(i64EncoderCntTmp>>56 & 0xFF); // LSB
-                        CAN_Transmit(CAN, MSG(2), &ttMsg); // Use msg 2 transmit
+                        tMsg.Data[0] = (uint8_t)(i64EncoderCntTmp & 0xFF); // MSB
+                        tMsg.Data[1] = (uint8_t)(i64EncoderCntTmp>>8 & 0xFF);
+                        tMsg.Data[2] = (uint8_t)(i64EncoderCntTmp>>16 & 0xFF);
+                        tMsg.Data[3] = (uint8_t)(i64EncoderCntTmp>>24 & 0xFF);
+                        tMsg.Data[4] = (uint8_t)(i64EncoderCntTmp>>32 & 0xFF);
+                        tMsg.Data[5] = (uint8_t)(i64EncoderCntTmp>>40 & 0xFF);
+                        tMsg.Data[6] = (uint8_t)(i64EncoderCntTmp>>48 & 0xFF);
+                        tMsg.Data[7] = (uint8_t)(i64EncoderCntTmp>>56 & 0xFF); // LSB
+                        CAN_Transmit(CAN, MSG(2), &tMsg); // Use msg 2 transmit
                         delay(100);
                     }
 

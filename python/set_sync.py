@@ -7,14 +7,10 @@ ch.setBusOutputControl(canlib.canDRIVER_NORMAL)
 
 ch.busOn()
 
-frame = Frame(id_=0x7FF, data=[5, 100, 10, 00, 10, 20, 10], dlc=7)
+frame = Frame(id_=0x7FF, data=[0x5A, 0x00, 0x01], dlc=3)
 
 ch.write(frame)
 
-frame = Frame(id_=512, data=[0])
-
-ch.write(frame)
-
-time.sleep(0.1)
+time.sleep(1)
 
 ch.busOff()
