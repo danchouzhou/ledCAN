@@ -345,7 +345,7 @@ int main()
                     break;
                 case MODE_NEO_BLINK: // blink, numberOfLEDs, r, g, b, delay (second*10)
                     updateLen(&pixels, u8NumOfPixels);
-                    NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
+                    NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, u8NumOfPixels);
                     NeoPixel_show(&pixels);
                     delay(u8Delay*10);
                     NeoPixel_clear(&pixels);
@@ -356,7 +356,7 @@ int main()
                     for(int i=0; i<MAX_BRIGHTNESS; i+=((u8Second>3)?1:5)) // Increase 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
+                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, u8NumOfPixels);
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
                         delayMicroseconds((uint32_t)u8Second*((u8Second>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
@@ -364,7 +364,7 @@ int main()
                     for(int i=MAX_BRIGHTNESS; i>=0; i-=((u8Second>3)?1:5)) // Decrease 5 if period <= 3 seconds
                     {
                         NeoPixel_setBrightness(&pixels, i);
-                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, NeoPixel_numPixels(&pixels));
+                        NeoPixel_fill(&pixels, u8Red, u8Green, u8Blue, 0, u8NumOfPixels);
                         NeoPixel_show(&pixels);
                         //delay((uint32_t)modeMsg.Data[5]*1000/512);
                         delayMicroseconds((uint32_t)u8Second*((u8Second>3)?3906:19530)); // 1000000/MAX_BRIGHTNESS/2
@@ -375,7 +375,7 @@ int main()
                     NeoPixel_setBrightness(&pixels, MAX_BRIGHTNESS);
                     break;
                 case MODE_NEO_SCROLL: // snake scroll, numberOfLEDs, r, g, b, length of snake, interval (ms)
-                    if(modeMsg.Data[1] != NeoPixel_numPixels(&pixels))
+                    if(u8NumOfPixels != NeoPixel_numPixels(&pixels))
                     {
                         NeoPixel_clear(&pixels);
                         NeoPixel_show(&pixels);
