@@ -16,6 +16,7 @@ reference
 # Format documentation: http://kicad-pcb.org/help/file-formats/
 
 # Temporary files
+*-backups
 *.000
 *.bak
 *.bck
