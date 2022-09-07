@@ -6,11 +6,12 @@
 
   (title_block
     (title "Multi purpose power converter module with CAN bus interface")
-    (date "2021-08-31")
-    (rev "1.1")
-    (company "DANCHOUZHOU")
-    (comment 1 "City Science - MIT Media Lab")
-    (comment 2 "danchouzhou@gmail.com")
+    (date "2022-09-07")
+    (rev "0.1")
+    (company "City Science Lab @ Taipei Tech /a cooperation with the MIT Media Lab")
+    (comment 1 "DANCHOUZHOU")
+    (comment 2 "https://github.com/danchouzhou")
+    (comment 3 "danchouzhou@gmail.com")
   )
 
   (lib_symbols
