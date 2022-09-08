@@ -1,0 +1,10 @@
+(sym_lib_table
+  (lib (name "M0A21")(type "Legacy")(uri "${KIPRJMOD}/M0A21/M0A21.lib")(options "")(descr ""))
+  (lib (name "MPQ4569")(type "Legacy")(uri "${KIPRJMOD}/MPQ4569/MPQ4569.lib")(options "")(descr ""))
+  (lib (name "NCS214")(type "Legacy")(uri "${KIPRJMOD}/SYNC_BUCK/NCS214.lib")(options "")(descr ""))
+  (lib (name "PSMQC076N12LS1")(type "Legacy")(uri "${KIPRJMOD}/SYNC_BUCK/PSMQC076N12LS1.lib")(options "")(descr ""))
+  (lib (name "PSMQC092N10LS1")(type "Legacy")(uri "${KIPRJMOD}/SYNC_BUCK/PSMQC092N10LS1.lib")(options "")(descr ""))
+  (lib (name "UCC27282")(type "Legacy")(uri "${KIPRJMOD}/SYNC_BUCK/UCC27282.lib")(options "")(descr ""))
+  (lib (name "PEC3124C2A-AU")(type "Legacy")(uri "${KIPRJMOD}/TCAN1162x-Q1/PEC3124C2A-AU.lib")(options "")(descr ""))
+  (lib (name "TCAN1162x-Q1")(type "Legacy")(uri "${KIPRJMOD}/TCAN1162x-Q1/TCAN1162x-Q1.lib")(options "")(descr ""))
+)

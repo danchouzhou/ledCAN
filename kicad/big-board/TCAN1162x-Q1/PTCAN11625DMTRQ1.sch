@@ -1,0 +1,351 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 2 5
+Title "Multi purpose power converter module with CAN bus interface"
+Date "2021-08-31"
+Rev "1.1"
+Comp "DANCHOUZHOU"
+Comment1 "City Science - MIT Media Lab"
+Comment2 "danchouzhou@gmail.com"
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L TCAN1162x-Q1:PTCAN11625DMTRQ1 U1
+U 1 1 60FC1BFD
+P 5650 4150
+F 0 "U1" H 5650 5015 50  0000 C CNN
+F 1 "PTCAN11625DMTRQ1" H 5650 4924 50  0000 C CNN
+F 2 "TI_VSON-14_4.5x3.0mm_DMT0014B:TI_VSON-14_4.5x3.0mm_DMT0014B_ThermalVias" H 5650 4150 50  0001 C CNN
+F 3 "" H 5650 4150 50  0001 C CNN
+	1    5650 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	5050 4650 4850 4650
+Wire Wire Line
+	4850 4650 4850 4750
+Wire Wire Line
+	4850 4750 5050 4750
+Connection ~ 4850 4750
+$Comp
+L Device:C C1
+U 1 1 60FC9B4E
+P 3850 4900
+F 0 "C1" H 3965 4946 50  0000 L CNN
+F 1 "100nF" H 3965 4855 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 3888 4750 50  0001 C CNN
+F 3 "~" H 3850 4900 50  0001 C CNN
+	1    3850 4900
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:C C2
+U 1 1 60FCA418
+P 4350 4900
+F 0 "C2" H 4465 4946 50  0000 L CNN
+F 1 "10uF" H 4465 4855 50  0000 L CNN
+F 2 "Capacitor_SMD:C_0603_1608Metric" H 4388 4750 50  0001 C CNN
+F 3 "~" H 4350 4900 50  0001 C CNN
+	1    4350 4900
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	4850 4750 4850 5250
+Wire Wire Line
+	4350 5250 4350 5050
+Wire Wire Line
+	3850 5250 3850 5050
+$Comp
+L power:GND #PWR02
+U 1 1 60FCB998
+P 3850 5250
+F 0 "#PWR02" H 3850 5000 50  0001 C CNN
+F 1 "GND" H 3855 5077 50  0000 C CNN
+F 2 "" H 3850 5250 50  0001 C CNN
+F 3 "" H 3850 5250 50  0001 C CNN
+	1    3850 5250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR04
+U 1 1 60FCBD63
+P 4350 5250
+F 0 "#PWR04" H 4350 5000 50  0001 C CNN
+F 1 "GND" H 4355 5077 50  0000 C CNN
+F 2 "" H 4350 5250 50  0001 C CNN
+F 3 "" H 4350 5250 50  0001 C CNN
+	1    4350 5250
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:GND #PWR05
+U 1 1 60FCC155
+P 4850 5250
+F 0 "#PWR05" H 4850 5000 50  0001 C CNN
+F 1 "GND" H 4855 5077 50  0000 C CNN
+F 2 "" H 4850 5250 50  0001 C CNN
+F 3 "" H 4850 5250 50  0001 C CNN
+	1    4850 5250
+	1    0    0    -1  
+$EndComp
+NoConn ~ 5050 4450
+Wire Wire Line
+	4550 3750 5050 3750
+Wire Wire Line
+	4550 3850 5050 3850
+Wire Wire Line
+	4550 3950 5050 3950
+Wire Wire Line
+	4550 4050 5050 4050
+Wire Wire Line
+	4550 4150 5050 4150
+Text Label 4550 4050 0    50   ~ 0
+CAN_TXD
+Text Label 4550 4150 0    50   ~ 0
+CAN_RXD
+Text Label 4550 3950 0    50   ~ 0
+nRST
+Text Label 4550 3850 0    50   ~ 0
+TS
+Text Label 4550 3750 0    50   ~ 0
+nSLP
+Wire Wire Line
+	5050 4550 4350 4550
+Wire Wire Line
+	4350 4550 4350 4750
+Wire Wire Line
+	5050 4250 3850 4250
+Wire Wire Line
+	3850 4250 3850 4750
+Wire Wire Line
+	5050 4350 4350 4350
+Wire Wire Line
+	4350 4350 4350 4550
+Connection ~ 4350 4550
+$Comp
+L power:+5V #PWR03
+U 1 1 60FD8FC4
+P 4350 4050
+F 0 "#PWR03" H 4350 3900 50  0001 C CNN
+F 1 "+5V" H 4365 4223 50  0000 C CNN
+F 2 "" H 4350 4050 50  0001 C CNN
+F 3 "" H 4350 4050 50  0001 C CNN
+	1    4350 4050
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+12V #PWR01
+U 1 1 60FD9D08
+P 3850 4050
+F 0 "#PWR01" H 3850 3900 50  0001 C CNN
+F 1 "+12V" H 3865 4223 50  0000 C CNN
+F 2 "" H 3850 4050 50  0001 C CNN
+F 3 "" H 3850 4050 50  0001 C CNN
+	1    3850 4050
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	3850 4050 3850 4250
+Connection ~ 3850 4250
+Wire Wire Line
+	4350 4050 4350 4350
+Connection ~ 4350 4350
+Wire Wire Line
+	7650 3950 7650 4450
+Connection ~ 7450 4450
+Wire Wire Line
+	7650 4450 7450 4450
+Connection ~ 7450 3850
+Wire Wire Line
+	7650 3850 7450 3850
+Wire Wire Line
+	7450 4450 6250 4450
+Wire Wire Line
+	7450 4250 7450 4450
+Wire Wire Line
+	7250 4250 7450 4250
+Wire Wire Line
+	7450 4050 7250 4050
+Wire Wire Line
+	7450 3850 7450 4050
+Wire Wire Line
+	6250 3850 7450 3850
+Wire Wire Line
+	6650 4150 6850 4150
+$Comp
+L power:GND #PWR07
+U 1 1 60FC2C9F
+P 6650 4150
+F 0 "#PWR07" H 6650 3900 50  0001 C CNN
+F 1 "GND" V 6655 4022 50  0000 R CNN
+F 2 "" H 6650 4150 50  0001 C CNN
+F 3 "" H 6650 4150 50  0001 C CNN
+	1    6650 4150
+	0    1    1    0   
+$EndComp
+$Comp
+L PEC3124C2A-AU:PEC3124C2A-AU D1
+U 1 1 60FC253B
+P 7050 4150
+F 0 "D1" H 7050 4400 50  0000 C CNN
+F 1 "PEC3124C2A-AU" H 7050 3900 50  0000 C CNN
+F 2 "Package_TO_SOT_SMD:SOT-23" H 7050 4800 50  0001 C CNN
+F 3 "" H 7050 4800 50  0001 C CNN
+F 4 "Bidirectional ESD protection" H 7050 4150 50  0001 C CNN "Description"
+F 5 "PANJIT" H 7050 4150 50  0001 C CNN "Manufacturer"
+F 6 "PEC3124C2A-AU_R1_000A1" H 7050 4150 50  0001 C CNN "Manufacturer P/N"
+	1    7050 4150
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7450 3550 7650 3550
+$Comp
+L power:GND #PWR09
+U 1 1 60FDF4BA
+P 7450 3650
+F 0 "#PWR09" H 7450 3400 50  0001 C CNN
+F 1 "GND" V 7455 3522 50  0000 R CNN
+F 2 "" H 7450 3650 50  0001 C CNN
+F 3 "" H 7450 3650 50  0001 C CNN
+	1    7450 3650
+	0    1    1    0   
+$EndComp
+Wire Notes Line
+	8500 950  10500 950 
+Wire Notes Line
+	10500 950  10500 2450
+Wire Notes Line
+	10500 2450 8500 2450
+Wire Notes Line
+	8500 2450 8500 950 
+NoConn ~ 5050 3650
+Wire Wire Line
+	4850 3550 5050 3550
+Wire Wire Line
+	9000 1900 9750 1900
+Wire Wire Line
+	9000 2000 9750 2000
+Wire Wire Line
+	9000 2100 9750 2100
+Wire Wire Line
+	9000 1500 9750 1500
+Wire Wire Line
+	9000 1600 9750 1600
+Text Label 9000 1500 0    50   ~ 0
+CAN_TXD
+Text Label 9000 1600 0    50   ~ 0
+CAN_RXD
+Text Label 9000 2100 0    50   ~ 0
+nRST
+Text Label 9000 2000 0    50   ~ 0
+TS
+Text Label 9000 1900 0    50   ~ 0
+nSLP
+Text Notes 8600 1150 0    100  Italic 20
+Off page connection
+Text GLabel 9750 1500 2    50   Input ~ 0
+CAN0_TXD
+Text GLabel 9750 1600 2    50   Output ~ 0
+CAN0_RXD
+Text GLabel 9750 1900 2    50   Input ~ 0
+TCAN_nSLP
+Text GLabel 9750 2000 2    50   Output ~ 0
+TCAN_TS
+Text GLabel 9750 2100 2    50   BiDi ~ 0
+TCAN_nRST
+$Comp
+L power:+BATT #PWR08
+U 1 1 611766F4
+P 6950 3350
+F 0 "#PWR08" H 6950 3200 50  0001 C CNN
+F 1 "+BATT" H 6965 3523 50  0000 C CNN
+F 2 "" H 6950 3350 50  0001 C CNN
+F 3 "" H 6950 3350 50  0001 C CNN
+	1    6950 3350
+	1    0    0    -1  
+$EndComp
+$Comp
+L power:+12V #PWR06
+U 1 1 6117CA31
+P 6550 3350
+F 0 "#PWR06" H 6550 3200 50  0001 C CNN
+F 1 "+12V" H 6565 3523 50  0000 C CNN
+F 2 "" H 6550 3350 50  0001 C CNN
+F 3 "" H 6550 3350 50  0001 C CNN
+	1    6550 3350
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7450 3650 7650 3650
+$Comp
+L Connector_Generic_MountingPin:Conn_01x05_MountingPin J1
+U 1 1 61184840
+P 7850 3750
+F 0 "J1" H 7938 3714 50  0000 L CNN
+F 1 "Conn_01x05_MountingPin" H 7938 3623 50  0000 L CNN
+F 2 "Connector_JST:JST_PH_S5B-PH-SM4-TB_1x05-1MP_P2.00mm_Horizontal" H 7850 3750 50  0001 C CNN
+F 3 "~" H 7850 3750 50  0001 C CNN
+	1    7850 3750
+	1    0    0    -1  
+$EndComp
+Wire Wire Line
+	7850 4350 7850 4150
+$Comp
+L power:GND #PWR010
+U 1 1 61186450
+P 7850 4350
+F 0 "#PWR010" H 7850 4100 50  0001 C CNN
+F 1 "GND" H 7855 4177 50  0000 C CNN
+F 2 "" H 7850 4350 50  0001 C CNN
+F 3 "" H 7850 4350 50  0001 C CNN
+	1    7850 4350
+	1    0    0    -1  
+$EndComp
+$Comp
+L Device:Fuse F1
+U 1 1 610D2CDE
+P 7300 3550
+F 0 "F1" V 7103 3550 50  0000 C CNN
+F 1 "Fuse" V 7194 3550 50  0000 C CNN
+F 2 "Fuse:Fuse_1206_3216Metric" V 7230 3550 50  0001 C CNN
+F 3 "~" H 7300 3550 50  0001 C CNN
+	1    7300 3550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	6950 3350 6950 3550
+Wire Wire Line
+	6950 3550 7150 3550
+Wire Wire Line
+	6550 3350 6550 3750
+Wire Wire Line
+	6550 3750 7650 3750
+$Comp
+L Device:R R3
+U 1 1 61303907
+P 4700 3550
+F 0 "R3" V 4493 3550 50  0000 C CNN
+F 1 "10K" V 4584 3550 50  0000 C CNN
+F 2 "Resistor_SMD:R_0603_1608Metric" V 4630 3550 50  0001 C CNN
+F 3 "~" H 4700 3550 50  0001 C CNN
+	1    4700 3550
+	0    1    1    0   
+$EndComp
+Wire Wire Line
+	4550 3550 4350 3550
+$Comp
+L power:GND #PWR0101
+U 1 1 61305475
+P 4350 3550
+F 0 "#PWR0101" H 4350 3300 50  0001 C CNN
+F 1 "GND" H 4355 3377 50  0000 C CNN
+F 2 "" H 4350 3550 50  0001 C CNN
+F 3 "" H 4350 3550 50  0001 C CNN
+	1    4350 3550
+	1    0    0    -1  
+$EndComp
+$EndSCHEMATC
