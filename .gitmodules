@@ -4,3 +4,6 @@
 [submodule "firmware/NuLibrary"]
 	path = firmware/NuLibrary
 	url = https://github.com/danchouzhou/NuLibrary.git
+[submodule "kicad/big-board/M0A21/DebugEdge"]
+	path = kicad/big-board/M0A21/DebugEdge
+	url = https://github.com/debug-edge/DebugEdge.git
