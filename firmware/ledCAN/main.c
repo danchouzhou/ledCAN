@@ -409,7 +409,8 @@ int main()
                     {
                         if (timeout(200) == 0)
                         {
-                            nidec_write(&nidec, modeMsg.Data[1], modeMsg.Data[2] & 0x1);
+                            nidec_write(&nidec, 0, 0);
+                            break;
                         }
                     }
 
