@@ -404,6 +404,7 @@ int main()
                     
                     // Stop the Nidec motor if there is no update
                     modeMsg.Data[1] = 0;
+                    g_u32SyncFlag = 0;
                     while(modeMsg.Data[1] == 0 || g_u32SyncFlag == 0)
                     {
                         if (timeout(200) == 0)
