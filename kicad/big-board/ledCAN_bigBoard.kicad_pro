@@ -377,12 +377,17 @@
         "line_style": 0,
         "microvia_diameter": 0.3,
         "microvia_drill": 0.1,
-        "name": "NCS214",
+        "name": "QFN10",
         "nets": [
           "/Synchronous buck/SENSE_OFF",
+          "Net-(C14-Pad2)",
+          "Net-(R14-Pad2)",
+          "Net-(R15-Pad2)",
           "Net-(R19-Pad1)",
           "Net-(R19-Pad2)",
-          "SYNC_ISEN"
+          "SYNC_EN",
+          "SYNC_HIN",
+          "SYNC_LIN"
         ],
         "pcb_color": "rgba(0, 0, 0, 0.000)",
         "schematic_color": "rgba(0, 0, 0, 0.000)",
