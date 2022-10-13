@@ -15,6 +15,17 @@ reference
 # For PCBs designed using KiCad: http://www.kicad-pcb.org/
 # Format documentation: http://kicad-pcb.org/help/file-formats/
 
+# Gerber
+*.gbl
+*.gbs
+*.gbo
+*.gm1
+*.gtl
+*.gts
+*.gto
+*.gbrjob
+*.drl
+
 # Temporary files
 *-backups
 *.000
